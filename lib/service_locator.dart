@@ -51,12 +51,12 @@ Future<void> initializeLocator() async {
   sl.registerSingleton<SharedPreferencesHelper>(SharedPreferencesHelper(sharedPreferences));
   sl.registerSingleton<SecureStorageHelper>(SecureStorageHelper(secureStorage));
 
-  sl.registerSingleton<LocalNotificationUtils>(LocalNotificationUtils(flutterLocalNotificationsPlugin));
+  sl.registerSingleton<LocalNotificationHelper>(LocalNotificationHelper(flutterLocalNotificationsPlugin));
   sl.registerSingleton<FirebaseCloudMessagingManager>(FirebaseCloudMessagingManager(fMessaging));
 
   //! Data source
   sl.registerSingleton<GuestDataSource>(GuestDataSourceImpl(sl()));
-  sl.registerSingleton<AuthDataSource>(AuthDataSourceImpl(sl(), sl(), sl()));
+  sl.registerSingleton<AuthDataSource>(AuthDataSourceImpl(sl(), sl(), sl(), sl()));
 
   sl.registerSingleton<DeliverDataSource>(DeliverDataSourceImpl(sl()));
 

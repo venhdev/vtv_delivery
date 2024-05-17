@@ -17,17 +17,6 @@ class VendorLoginPage extends StatelessWidget {
       onLoginPressed: (username, password) async {
         context.read<AuthCubit>().loginWithUsernameAndPassword(username: username, password: password);
       },
-      invokeAuthChanged: (status) {
-        // if (status == AuthStatus.authenticated) {
-        //   ScaffoldMessenger.of(context)
-        //     ..hideCurrentSnackBar()
-        //     ..showSnackBar(
-        //       const SnackBar(
-        //         content: Text('Đăng nhập thành công'),
-        //       ),
-        //     );
-        // }
-      },
     );
   }
 }

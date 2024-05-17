@@ -78,6 +78,14 @@ class MenuPage extends StatelessWidget {
             },
             icon: const Icon(Icons.account_circle_outlined),
           ),
+
+          // dev page
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed('/dev');
+            },
+            icon: const Icon(Icons.developer_mode),
+          ),
         ],
       ),
       body: Center(

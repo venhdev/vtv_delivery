@@ -42,6 +42,12 @@ class DeliverPage extends StatelessWidget {
           },
           child: const Text('login as vtv driver (evtv01)'),
         ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/dev');
+          },
+          child: const Text('dev page'),
+        ),
       ],
     );
   }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:vtv_common/core.dart';
+import 'package:vtv_common/dev.dart';
 
 import 'features/deliver/presentation/pages/deliver_page.dart';
 import 'features/deliver/presentation/pages/deliver_profile_page.dart';
 import 'features/deliver/presentation/pages/order_pickup_page.dart';
+import 'service_locator.dart';
 
 class DriverApp extends StatelessWidget {
   const DriverApp({super.key});
@@ -17,13 +19,13 @@ class DriverApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      // home: const Demo(),
       initialRoute: '/',
       routes: {
         '/': (context) => const DeliverPage(),
         '/profile': (context) => const DeliverProfilePage(),
         '/scan': (context) => const QrScannerPage(),
         '/pickup': (context) => const OrderPickUpPage(),
+        '/dev': (context) => DevPage(sl: sl),
       },
     );
   }

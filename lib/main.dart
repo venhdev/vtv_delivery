@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
+import 'package:vtv_common/dev.dart';
 
 import 'config/firebase_options.dart';
 import 'driver_app.dart';
@@ -18,20 +19,22 @@ void main() async {
   );
 
   await initializeLocator();
-  sl<LocalNotificationUtils>().init();
+  sl<LocalNotificationHelper>().init();
   sl<FirebaseCloudMessagingManager>().init();
 
   final authCubit = sl<AuthCubit>()..onStarted();
 
-  // // NOTE: dev
-  // final domain = sl<SharedPreferencesHelper>().I.getString('devDomain');
-  // if (domain != null) {
-  //   // devDOMAIN = domain;
-  //   devDOMAIN = '192.168.1.12';
-
-  // }
-
-  devDOMAIN = '192.168.1.12';
+  // NOTE: dev
+  final savedHost = sl<SharedPreferencesHelper>().I.getString('host');
+  if (savedHost != null) {
+    host = savedHost;
+  } else {
+    final curHost = await DevUtils.initHostWithCurrentIPv4('192.168.1.100');
+    if (curHost != null) {
+      // host = curHost; // already set in initHostWithCurrentIPv4
+      sl<SharedPreferencesHelper>().I.setString('host', curHost);
+    }
+  }
 
   runApp(MultiProvider(
     providers: [
