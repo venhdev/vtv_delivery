@@ -11,7 +11,7 @@ import 'package:vtv_common/config.dart';
 import 'package:vtv_common/core.dart';
 import 'package:vtv_common/guest.dart';
 
-import 'config/dio/auth_driver_interceptor.dart';
+import 'config/dio/driver_auth_interceptor.dart';
 import 'features/deliver/data/data_sources/deliver_data_source.dart';
 import 'features/deliver/data/repository/deliver_repository_impl.dart';
 import 'features/deliver/domain/repository/deliver_repository.dart';
@@ -38,7 +38,7 @@ Future<void> initializeLocator() async {
         responseHeader: false,
         error: false,
       ),
-      AuthDriverInterceptor(),
+      DriverAuthInterceptor(),
       ErrorInterceptor(),
     ],
   );

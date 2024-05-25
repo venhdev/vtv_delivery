@@ -28,7 +28,7 @@ class DeliverDataSourceImpl implements DeliverDataSource {
 
   @override
   Future<SuccessResponse<DeliverEntity>> getDeliverInfo() async {
-    final url = baseUri(path: kAPIDeliverInfoURL);
+    final url = uriBuilder(path: kAPIDeliverInfoURL);
 
     final response = await _dio.getUri(url);
 
@@ -41,7 +41,7 @@ class DeliverDataSourceImpl implements DeliverDataSource {
 
   @override
   Future<SuccessResponse<TransportResp>> getTransportByWardCode(String wardCode) async {
-    final url = baseUri(path: '$kAPITransportGetWardURL/$wardCode');
+    final url = uriBuilder(path: '$kAPITransportGetWardURL/$wardCode');
 
     final response = await _dio.getUri(url);
 
@@ -55,7 +55,7 @@ class DeliverDataSourceImpl implements DeliverDataSource {
   @override
   Future<SuccessResponse<TransportEntity>> updateStatusTransportByDeliver(
       String transportId, OrderStatus status, bool handled, String wardCode) async {
-    final url = baseUri(path: '$kAPITransportUpdateStatusURL/$transportId', queryParameters: {
+    final url = uriBuilder(path: '$kAPITransportUpdateStatusURL/$transportId', queryParameters: {
       'status': status.name,
       'handled': handled.toString(),
       'wardCode': wardCode,
@@ -72,7 +72,7 @@ class DeliverDataSourceImpl implements DeliverDataSource {
 
   @override
   Future<SuccessResponse<TransportResp>> getTransportByWardWork() async {
-    final url = baseUri(path: kAPITransportGetByWardWorkURL);
+    final url = uriBuilder(path: kAPITransportGetByWardWorkURL);
 
     final response = await _dio.getUri(url);
 

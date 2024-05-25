@@ -5,7 +5,7 @@ import 'package:vtv_common/core.dart';
 
 import '../../service_locator.dart';
 
-class AuthDriverInterceptor extends QueuedInterceptor {
+class DriverAuthInterceptor extends QueuedInterceptor {
   final _innerDio = Dio();
 
   @override
@@ -70,7 +70,7 @@ class AuthDriverInterceptor extends QueuedInterceptor {
   }
 
   Future<String> getNewAccessToken(String refreshToken) async {
-    final url = baseUri(path: kAPIAuthRefreshTokenURL);
+    final url = uriBuilder(path: kAPIAuthRefreshTokenURL);
     final resp = await _innerDio.postUri(
       url,
       options: Options(
