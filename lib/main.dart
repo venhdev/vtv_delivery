@@ -1,4 +1,3 @@
-import 'package:driver/service_locator.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,15 +7,14 @@ import 'package:vtv_common/core.dart';
 import 'package:vtv_common/dev.dart';
 
 import 'config/firebase_options.dart';
-import 'driver_app.dart';
+import 'delivery_app.dart';
+import 'dependency_container.dart';
 
 void main() async {
   // WidgetsBinding widgetsBinding =
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await initializeLocator();
   sl<LocalNotificationHelper>().init();
@@ -31,7 +29,6 @@ void main() async {
   } else {
     final curHost = await DevUtils.initHostWithCurrentIPv4('192.168.1.100');
     if (curHost != null) {
-      // host = curHost; // already set in initHostWithCurrentIPv4
       sl<SharedPreferencesHelper>().I.setString('host', curHost);
     }
   }
@@ -40,6 +37,6 @@ void main() async {
     providers: [
       BlocProvider(create: (context) => authCubit),
     ],
-    child: const DriverApp(),
+    child: const DeliveryApp(),
   ));
 }
