@@ -12,6 +12,7 @@ import 'package:vtv_common/core.dart';
 import 'package:vtv_common/guest.dart';
 
 import 'config/dio/delivery_auth_interceptor.dart';
+import 'core/handler/delivery_redirect.dart';
 import 'features/delivery/data/data_sources/deliver_data_source.dart';
 import 'features/delivery/data/repository/deliver_repository_impl.dart';
 import 'features/delivery/domain/repository/deliver_repository.dart';
@@ -27,6 +28,7 @@ Future<void> initializeLocator() async {
 
   final fMessaging = FirebaseMessaging.instance;
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
   final dio = Dio(dioOptions);
   dio.interceptors.addAll(
     [
@@ -72,7 +74,13 @@ Future<void> initializeLocator() async {
   sl.registerLazySingleton<CheckTokenUC>(() => CheckTokenUC(sl()));
 
   //! Bloc
-  sl.registerFactory(() => AuthCubit(sl(), sl(), sl(), sl()));
+  sl.registerFactory(() => AuthCubit(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        DeliverAuthRedirect(redirect: {}),
+      ));
 }
 
 // <https://pub.dev/packages/get_it>

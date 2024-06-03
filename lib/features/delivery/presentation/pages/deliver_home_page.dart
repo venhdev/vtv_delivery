@@ -30,6 +30,7 @@ class DeliverHomePage extends StatelessWidget {
               onPressed: () => context.read<AuthCubit>().logout(state.auth!.refreshToken),
             );
           }
+          // return page base on type work
           return _HomePageWithBottomNavigation('Xin chào, ${state.auth!.userInfo.username!}');
         } else {
           return _noAuth(context);

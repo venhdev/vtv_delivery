@@ -15,10 +15,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   await initializeLocator();
-  sl<LocalNotificationHelper>().init();
-  sl<FirebaseCloudMessagingManager>().init();
+
+  // sl<LocalNotificationHelper>().initializePluginAndHandler();
+  // sl<FirebaseCloudMessagingManager>().requestPermission();
 
   final authCubit = sl<AuthCubit>()..onStarted();
 
