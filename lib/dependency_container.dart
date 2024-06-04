@@ -1,4 +1,3 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -22,7 +21,7 @@ GetIt sl = GetIt.instance;
 
 Future<void> initializeLocator() async {
   //! External
-  final connectivity = Connectivity();
+  // final connectivity = Connectivity();
   final sharedPreferences = await SharedPreferences.getInstance();
   const secureStorage = FlutterSecureStorage();
 
@@ -32,14 +31,14 @@ Future<void> initializeLocator() async {
   final dio = Dio(dioOptions);
   dio.interceptors.addAll(
     [
-      // LogInterceptor(
-      //   request: true,
-      //   requestBody: false,
-      //   responseBody: false,
-      //   requestHeader: false,
-      //   responseHeader: false,
-      //   error: false,
-      // ),
+      LogInterceptor(
+        request: true,
+        requestBody: true,
+        responseBody: true,
+        requestHeader: true,
+        responseHeader: true,
+        error: true,
+      ),
       DeliveryAuthInterceptor(),
       ErrorInterceptor(),
     ],
@@ -47,7 +46,7 @@ Future<void> initializeLocator() async {
 
   sl.registerSingleton<http.Client>(http.Client());
   sl.registerSingleton<Dio>(dio);
-  sl.registerSingleton<Connectivity>(connectivity);
+  // sl.registerSingleton<Connectivity>(connectivity);
 
   //! Core - Helpers - Managers
   sl.registerSingleton<SharedPreferencesHelper>(SharedPreferencesHelper(sharedPreferences));

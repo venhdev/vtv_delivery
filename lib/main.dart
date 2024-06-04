@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +7,7 @@ import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
 import 'package:vtv_common/dev.dart';
 
+import 'app_state.dart';
 import 'config/firebase_options.dart';
 import 'delivery_app.dart';
 import 'dependency_container.dart';
@@ -18,7 +20,7 @@ void main() async {
   await initializeLocator();
 
   // sl<LocalNotificationHelper>().initializePluginAndHandler();
-  // sl<FirebaseCloudMessagingManager>().requestPermission();
+  sl<FirebaseCloudMessagingManager>().requestPermission();
 
   final authCubit = sl<AuthCubit>()..onStarted();
 
@@ -33,8 +35,12 @@ void main() async {
     }
   }
 
+  final appState = AppState(Connectivity());
+  await appState.init();
+
   runApp(MultiProvider(
     providers: [
+      ChangeNotifierProvider(create: (_) => appState),
       BlocProvider(create: (context) => authCubit),
     ],
     child: const DeliveryApp(),

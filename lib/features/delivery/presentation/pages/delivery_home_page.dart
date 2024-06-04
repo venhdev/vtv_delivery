@@ -7,8 +7,8 @@ import '../../../../dependency_container.dart';
 import '../../domain/repository/deliver_repository.dart';
 import '../components/home_page_content.dart';
 
-class DeliverHomePage extends StatelessWidget {
-  const DeliverHomePage({super.key});
+class DeliveryHomePage extends StatelessWidget {
+  const DeliveryHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
