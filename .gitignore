@@ -45,3 +45,4 @@ app.*.map.json
 # Sensitivity related
 /.env
 firebase_options.dart
+private.txt

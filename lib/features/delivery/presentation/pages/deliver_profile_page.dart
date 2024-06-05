@@ -27,6 +27,13 @@ class DeliverProfilePage extends StatelessWidget {
             },
             icon: const Icon(Icons.developer_mode),
           ),
+          //# app info
+          IconButton(
+            onPressed: () {
+              showCrossPlatformAboutDialog(context: context);
+            },
+            icon: const Icon(Icons.info),
+          ),
         ],
       ),
       body: BlocBuilder<AuthCubit, AuthState>(
