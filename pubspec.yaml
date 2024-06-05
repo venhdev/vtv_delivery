@@ -19,7 +19,9 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: '0.0.3-dev'
 
 environment:
-  sdk: ">=3.3.3 <4.0.0"
+  sdk: '>=3.5.0-152 <4.0.0'
+  # sdk: ^3.5.0-152
+  # sdk: ">=3.3.3 <4.0.0"
 
 dependencies:
   vtv_common:
@@ -55,6 +57,7 @@ dependencies:
   provider: ^6.1.1
   get_it: ^7.6.7
   equatable: ^2.0.5
+  json: ^0.20.1
 
   # network
   http:

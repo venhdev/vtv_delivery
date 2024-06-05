@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:vtv_common/core.dart';
 import 'package:vtv_common/order.dart';
 
-import '../../../../core/constants/deliver_api.dart';
+import '../../../../core/constants/delivery_api.dart';
 import '../../domain/entities/deliver_entity.dart';
 import '../../domain/entities/res/transport_resp.dart';
 
