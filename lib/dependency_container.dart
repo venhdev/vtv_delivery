@@ -12,6 +12,9 @@ import 'package:vtv_common/guest.dart';
 
 import 'config/dio/delivery_auth_interceptor.dart';
 import 'core/handler/delivery_redirect.dart';
+import 'features/cash/data/datasources/cash_data_source.dart';
+import 'features/cash/data/repository/cash_repository_impl.dart';
+import 'features/cash/domain/repository/cash_repository.dart';
 import 'features/delivery/data/data_sources/deliver_data_source.dart';
 import 'features/delivery/data/repository/deliver_repository_impl.dart';
 import 'features/delivery/domain/repository/deliver_repository.dart';
@@ -31,14 +34,14 @@ Future<void> initializeLocator() async {
   final dio = Dio(dioOptions);
   dio.interceptors.addAll(
     [
-      LogInterceptor(
-        request: true,
-        requestBody: true,
-        responseBody: true,
-        requestHeader: true,
-        responseHeader: true,
-        error: true,
-      ),
+      // LogInterceptor(
+      //   request: true,
+      //   requestBody: true,
+      //   responseBody: true,
+      //   requestHeader: true,
+      //   responseHeader: true,
+      //   error: true,
+      // ),
       DeliveryAuthInterceptor(),
       ErrorInterceptor(),
     ],
@@ -60,12 +63,14 @@ Future<void> initializeLocator() async {
   sl.registerSingleton<AuthDataSource>(AuthDataSourceImpl(sl(), sl(), sl(), sl()));
 
   sl.registerSingleton<DeliverDataSource>(DeliverDataSourceImpl(sl()));
+  sl.registerSingleton<CashDataSource>(CashDataSourceImpl(sl()));
 
   //! Repository
   sl.registerSingleton<GuestRepository>(GuestRepositoryImpl(sl()));
   sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl(), sl()));
 
   sl.registerSingleton<DeliverRepository>(DeliverRepositoryImpl(sl()));
+  sl.registerSingleton<CashRepository>(CashRepositoryImpl(sl()));
 
   //! UseCase
   sl.registerLazySingleton<LoginWithUsernameAndPasswordUC>(() => LoginWithUsernameAndPasswordUC(sl()));

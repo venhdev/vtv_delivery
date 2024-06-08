@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
+import 'package:vtv_common/core.dart';
 
 class CashOrderEntity extends Equatable {
   final String cashOrderId;
@@ -10,10 +11,10 @@ class CashOrderEntity extends Equatable {
   final int money;
   final String shipperUsername;
   final bool shipperHold;
-  final String waveHouseUsername; //TODO: rename to ware
+  final String? waveHouseUsername; //TODO: rename to ware
   final bool waveHouseHold;
   final bool handlePayment;
-  final String status;
+  final Status status;
   final DateTime createAt;
   final DateTime updateAt;
 
@@ -32,8 +33,17 @@ class CashOrderEntity extends Equatable {
     required this.updateAt,
   });
 
+  String get statusNameByShipper {
+    if (shipperHold) {
+      return 'Đang giữ tiền';
+    } else if (waveHouseHold) {
+      return 'Đã nộp kho';
+    }
+    return 'Unknown status';
+  }
+
   @override
-  List<Object> get props {
+  List<Object?> get props {
     return [
       cashOrderId,
       transportId,
@@ -64,7 +74,7 @@ class CashOrderEntity extends Equatable {
       'waveHouseUsername': waveHouseUsername,
       'waveHouseHold': waveHouseHold,
       'handlePayment': handlePayment,
-      'status': status,
+      'status': status.name,
       'createAt': createAt.toIso8601String(),
       'updateAt': updateAt.toIso8601String,
     };
@@ -78,10 +88,10 @@ class CashOrderEntity extends Equatable {
       money: map['money'] as int,
       shipperUsername: map['shipperUsername'] as String,
       shipperHold: map['shipperHold'] as bool,
-      waveHouseUsername: map['waveHouseUsername'] as String,
+      waveHouseUsername: map['waveHouseUsername'] as String?,
       waveHouseHold: map['waveHouseHold'] as bool,
       handlePayment: map['handlePayment'] as bool,
-      status: map['status'] as String,
+      status: Status.values.firstWhere((element) => element.name == map['status'] as String),
       createAt: DateTime.parse(map['createAt'] as String),
       updateAt: DateTime.parse(map['updateAt'] as String),
     );

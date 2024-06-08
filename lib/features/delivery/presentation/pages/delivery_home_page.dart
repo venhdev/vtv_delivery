@@ -4,6 +4,7 @@ import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
 
 import '../../../../dependency_container.dart';
+import '../../../cash/presentation/pages/cash_order_page.dart';
 import '../../domain/repository/deliver_repository.dart';
 import '../components/home_page_content.dart';
 
@@ -75,6 +76,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
   Widget? _bottomNavigationBar() {
     return BottomNavigationBar(
       onTap: _onItemTapped,
+      currentIndex: _selectedIndex,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
@@ -88,19 +90,23 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
     );
   }
 
+  bool showAppBar() {
+    return _selectedIndex == 0;
+  }
+
   @override
   void initState() {
     super.initState();
     _widgetOptions = <Widget>[
       const HomePageContent(),
-      const Center(child: Text('Đơn hàng')),
+      const CashOrderPage(),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title), centerTitle: true, actions: _actions(context)),
+      appBar: showAppBar() ? AppBar(title: Text(widget.title), centerTitle: true, actions: _actions(context)) : null,
       bottomNavigationBar: _bottomNavigationBar(),
       body: _widgetOptions.elementAt(_selectedIndex),
     );

@@ -1,7 +1,7 @@
 import 'package:delivery/features/cash/domain/entities/request/transfer_money_request.dart';
 import 'package:vtv_common/core.dart';
 
-import '../entities/cash_by_date_entity.dart';
+import '../entities/cash_order_by_date_entity.dart';
 import '../entities/response/cash_order_response.dart';
 
 abstract class CashRepository {
@@ -23,12 +23,12 @@ abstract class CashRepository {
   // GET
   // /api/shipping/cash-order/history-by-warehouse
   // const String kAPICashOrderHistoryByWarehouseURL = '/shipping/cash-order/history-by-warehouse';
-  FRespData<List<CashByDateEntity>> historyByWareHouse(({bool warehouseHold, bool handlePayment}) warehouseType);
+  FRespData<List<CashOrderByDateEntity>> historyByWareHouse(({bool warehouseHold, bool handlePayment}) warehouseType);
 
   // GET
   // /api/shipping/cash-order/history-by-shipper
   // const String kAPICashOrderHistoryByShipperURL = '/shipping/cash-order/history-by-shipper';
-  FRespData<List<CashByDateEntity>> historyByShipper(({bool shipperHold, bool shipping}) shipperType);
+  FRespData<List<CashOrderByDateEntity>> historyByShipper(({bool shipperHold, bool shipping}) shipperType);
 
   // GET
   // /api/shipping/cash-order/all-by-shipper
@@ -38,6 +38,7 @@ abstract class CashRepository {
 
 class HistoryType {
   //# shipper
+  //! error...
   /// shipper is holding order (not shipping to customer yet)
   static ({bool shipperHold, bool shipping}) shipperShipping = (shipperHold: false, shipping: true);
 

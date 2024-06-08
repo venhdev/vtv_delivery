@@ -4,13 +4,13 @@ import 'dart:convert';
 import 'package:delivery/features/cash/domain/entities/cash_order_entity.dart';
 import 'package:equatable/equatable.dart';
 
-class CashByDateEntity extends Equatable {
+class CashOrderByDateEntity extends Equatable {
   final DateTime date;
   final int count;
   final int totalMoney;
   final List<CashOrderEntity> cashOrders;
 
-  const CashByDateEntity({
+  const CashOrderByDateEntity({
     required this.date,
     required this.count,
     required this.totalMoney,
@@ -20,13 +20,13 @@ class CashByDateEntity extends Equatable {
   @override
   List<Object> get props => [date, count, totalMoney, cashOrders];
 
-  CashByDateEntity copyWith({
+  CashOrderByDateEntity copyWith({
     DateTime? date,
     int? count,
     int? totalMoney,
     List<CashOrderEntity>? cashOrders,
   }) {
-    return CashByDateEntity(
+    return CashOrderByDateEntity(
       date: date ?? this.date,
       count: count ?? this.count,
       totalMoney: totalMoney ?? this.totalMoney,
@@ -43,8 +43,8 @@ class CashByDateEntity extends Equatable {
     };
   }
 
-  factory CashByDateEntity.fromMap(Map<String, dynamic> map) {
-    return CashByDateEntity(
+  factory CashOrderByDateEntity.fromMap(Map<String, dynamic> map) {
+    return CashOrderByDateEntity(
       date: DateTime.parse(map['date'] as String),
       count: map['count'] as int,
       totalMoney: map['totalMoney'] as int,
@@ -58,8 +58,8 @@ class CashByDateEntity extends Equatable {
 
   String toJson() => json.encode(toMap());
 
-  factory CashByDateEntity.fromJson(String source) =>
-      CashByDateEntity.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory CashOrderByDateEntity.fromJson(String source) =>
+      CashOrderByDateEntity.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   bool get stringify => true;

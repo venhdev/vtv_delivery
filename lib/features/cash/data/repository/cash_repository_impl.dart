@@ -1,4 +1,4 @@
-import 'package:delivery/features/cash/domain/entities/cash_by_date_entity.dart';
+import 'package:delivery/features/cash/domain/entities/cash_order_by_date_entity.dart';
 
 import 'package:delivery/features/cash/domain/entities/request/transfer_money_request.dart';
 
@@ -20,12 +20,12 @@ class CashRepositoryImpl implements CashRepository {
   }
 
   @override
-  FRespData<List<CashByDateEntity>> historyByShipper(({bool shipperHold, bool shipping}) shipperType) async {
+  FRespData<List<CashOrderByDateEntity>> historyByShipper(({bool shipperHold, bool shipping}) shipperType) async {
     return await handleDataResponseFromDataSource(dataCallback: () => _cashDataSource.historyByShipper(shipperType));
   }
 
   @override
-  FRespData<List<CashByDateEntity>> historyByWareHouse(({bool handlePayment, bool warehouseHold}) warehouseType) async {
+  FRespData<List<CashOrderByDateEntity>> historyByWareHouse(({bool handlePayment, bool warehouseHold}) warehouseType) async {
     return await handleDataResponseFromDataSource(
         dataCallback: () => _cashDataSource.historyByWareHouse(warehouseType));
   }
