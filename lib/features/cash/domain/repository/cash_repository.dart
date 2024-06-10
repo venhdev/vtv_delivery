@@ -9,7 +9,7 @@ abstract class CashRepository {
   // POST
   // /api/shipping/cash-order/updates/transfers-money-warehouse
   // const String kAPICashOrderTransfersMoneyWarehouseURL = '/shipping/cash-order/updates/transfers-money-warehouse';
-  FRespData<CashOrderResp> transfersMoneyWarehouseByShipper(TransferMoneyRequest req);
+  FRespData<CashOrderResp> requestTransfersMoneyToWarehouseByShipper(TransferMoneyRequest req);
   // POST
   // /api/shipping/cash-order/updates/confirm-money-warehouse
   // const String kAPICashOrderConfirmMoneyWarehouseURL = '/shipping/cash-order/updates/confirm-money-warehouse';
@@ -50,7 +50,7 @@ class HistoryType {
 
   //# warehouse
   /// under review transferred from shipper to warehouse
-  static ({bool warehouseHold, bool handlePayment}) warehouseUnderReviewTransferred =
+  static ({bool warehouseHold, bool handlePayment}) warehouseUnderConfirmationReceived =
       (warehouseHold: false, handlePayment: false);
 
   /// warehouse is holding money

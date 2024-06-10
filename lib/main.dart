@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:delivery/core/handler/driver_handler.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,8 +36,9 @@ void main() async {
     }
   }
 
-  final appState = AppState(Connectivity());
+  final appState = AppState(Connectivity(), fetchInfoCallback: () async => await DeliveryHandler.getDeliverInfo());
   await appState.init();
+  if (authCubit.state.isAuthenticated) await appState.fetchDeliveryInfo();
 
   runApp(MultiProvider(
     providers: [

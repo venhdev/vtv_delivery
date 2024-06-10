@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
 import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
 
+import '../../../../app_state.dart';
 import '../../../../dependency_container.dart';
-import '../../../cash/presentation/pages/cash_order_page.dart';
+import '../../../cash/presentation/pages/cash_order_by_shipper_page.dart';
+import '../../../cash/presentation/pages/cash_order_by_warehouse_page.dart';
 import '../../domain/repository/deliver_repository.dart';
 import '../components/home_page_content.dart';
 
@@ -22,15 +26,23 @@ class DeliveryHomePage extends StatelessWidget {
               SnackBar(content: Text(state.message ?? 'Có lỗi xảy ra! Vui lòng thử lại!')),
             );
         }
+
+        // final appState = Provider.of<AppState>(context, listen: false);
+        // if (state.status == AuthStatus.authenticated) {
+        //   if (appState.deliveryInfo == null) appState.fetchDeliveryInfo();
+        // } else if (state.status == AuthStatus.unauthenticated) {
+        //   appState.fetchDeliveryInfo();
+        // }
       },
       builder: (context, state) {
         if (state.status == AuthStatus.authenticated) {
-          if (!state.auth!.userInfo.roles!.contains(Role.DELIVER)) {
+          if (!state.isDeliver) {
             return NoPermissionPage(
               message: 'Bạn không có quyền truy cập vào ứng dụng này!',
               onPressed: () => context.read<AuthCubit>().logout(state.auth!.refreshToken),
             );
           }
+
           // return page base on type work
           return _HomePageWithBottomNavigation('Xin chào, ${state.auth!.userInfo.username!}');
         } else {
@@ -68,6 +80,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
   late List<Widget> _widgetOptions;
 
   void _onItemTapped(int index) {
+    if (_selectedIndex == index) return;
     setState(() {
       _selectedIndex = index;
     });
@@ -94,21 +107,58 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
     return _selectedIndex == 0;
   }
 
+  void fetchDeliveryInfo(BuildContext context, AppState? state) {
+    final AppState appState;
+    if (state == null) {
+      appState = Provider.of<AppState>(context, listen: false);
+    } else {
+      appState = state;
+    }
+    final authState = context.read<AuthCubit>().state;
+    if (authState.status == AuthStatus.authenticated && appState.deliveryInfo == null) {
+      appState.fetchDeliveryInfo();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _widgetOptions = <Widget>[
       const HomePageContent(),
-      const CashOrderPage(),
+      Consumer<AppState>(
+        builder: (context, state, child) {
+          switch (state.typeWork) {
+            case 'SHIPPER':
+              return const CashOrderByShipperPage();
+            case 'WAREHOUSE':
+              return const CashOrderByWarehousePage();
+            default:
+              Logger().e('typeWork: ${state.typeWork}');
+              return Center(
+                child: Text('deliveryInfo: ${Provider.of<AppState>(context, listen: false).deliveryInfo.toString()}'),
+              );
+          }
+        },
+      ),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: showAppBar() ? AppBar(title: Text(widget.title), centerTitle: true, actions: _actions(context)) : null,
-      bottomNavigationBar: _bottomNavigationBar(),
-      body: _widgetOptions.elementAt(_selectedIndex),
+    return Consumer<AppState>(
+      builder: (context, state, child) {
+        if (state.deliveryInfo == null) {
+          fetchDeliveryInfo(context, state);
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          return child!;
+        }
+      },
+      child: Scaffold(
+        appBar: showAppBar() ? AppBar(title: Text(widget.title), centerTitle: true, actions: _actions(context)) : null,
+        bottomNavigationBar: _bottomNavigationBar(),
+        body: _widgetOptions.elementAt(_selectedIndex),
+      ),
     );
   }
 

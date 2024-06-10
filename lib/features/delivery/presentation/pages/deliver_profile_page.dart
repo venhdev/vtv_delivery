@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
 
+import '../../../../app_state.dart';
 import '../../domain/entities/deliver_entity.dart';
 
 class DeliverProfilePage extends StatelessWidget {
@@ -53,7 +55,8 @@ class DeliverProfilePage extends StatelessWidget {
                     BlocBuilder<AuthCubit, AuthState>(builder: (context, state) {
                       return ElevatedButton(
                         onPressed: () {
-                          var refreshToken = context.read<AuthCubit>().state.auth!.refreshToken;
+                          Provider.of<AppState>(context, listen: false).removeDeliveryInfo();
+                          final refreshToken = context.read<AuthCubit>().state.auth!.refreshToken;
                           context.read<AuthCubit>().logout(refreshToken);
                           if (context.mounted) Navigator.of(context).pop();
                         },

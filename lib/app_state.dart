@@ -1,15 +1,19 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:delivery/core/constants/global_variables.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:vtv_common/constant.dart';
 import 'package:vtv_common/core.dart';
 
-class AppState extends ChangeNotifier {
-  final Connectivity _connectivity;
+import 'core/constants/global_variables.dart';
+import 'features/delivery/domain/entities/deliver_entity.dart';
 
-  AppState(this._connectivity, {this.overlayEntry});
+class AppState extends ChangeNotifier {
+  AppState(this._connectivity, {required Future<DeliverEntity?> Function() fetchInfoCallback})
+      : _fetchInfoCallback = fetchInfoCallback;
+
+  final Connectivity _connectivity;
+  final Future<DeliverEntity?> Function() _fetchInfoCallback;
 
   /// Initializes the app state.
   /// - Checks if the device has an internet connection.
@@ -89,5 +93,21 @@ class AppState extends ChangeNotifier {
 
       notifyListeners();
     });
+  }
+
+  //*---------------------Delivery Info (Shipper || Warehouse)-----------------------*//
+  DeliverEntity? _deliveryInfo;
+  DeliverEntity? get deliveryInfo => _deliveryInfo;
+  String? get typeWork =>
+      TypeWork.values.firstWhere((e) => e.name == _deliveryInfo?.typeWork, orElse: () => TypeWork.Unknown).name;
+
+  Future<void> fetchDeliveryInfo() async {
+    _deliveryInfo = await _fetchInfoCallback();
+    notifyListeners();
+  }
+
+  void removeDeliveryInfo() {
+    _deliveryInfo = null;
+    notifyListeners();
   }
 }

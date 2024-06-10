@@ -41,7 +41,7 @@ class CashRepositoryImpl implements CashRepository {
   }
 
   @override
-  FRespData<CashOrderResp> transfersMoneyWarehouseByShipper(TransferMoneyRequest req) async {
+  FRespData<CashOrderResp> requestTransfersMoneyToWarehouseByShipper(TransferMoneyRequest req) async {
     return await handleDataResponseFromDataSource(
         dataCallback: () => _cashDataSource.transfersMoneyWarehouseByShipper(req));
   }

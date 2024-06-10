@@ -11,8 +11,8 @@ class CashOrderEntity extends Equatable {
   final int money;
   final String shipperUsername;
   final bool shipperHold;
-  final String? waveHouseUsername; //TODO: rename to ware
-  final bool waveHouseHold;
+  final String? wareHouseUsername; //TODO: rename to ware
+  final bool wareHouseHold;
   final bool handlePayment;
   final Status status;
   final DateTime createAt;
@@ -25,8 +25,8 @@ class CashOrderEntity extends Equatable {
     required this.money,
     required this.shipperUsername,
     required this.shipperHold,
-    required this.waveHouseUsername,
-    required this.waveHouseHold,
+    required this.wareHouseUsername,
+    required this.wareHouseHold,
     required this.handlePayment,
     required this.status,
     required this.createAt,
@@ -34,10 +34,14 @@ class CashOrderEntity extends Equatable {
   });
 
   String get statusNameByShipper {
-    if (shipperHold) {
-      return 'Đang giữ tiền';
-    } else if (waveHouseHold) {
-      return 'Đã nộp kho';
+    if (shipperHold && !wareHouseHold && !handlePayment) {
+      return 'Bạn đang giữ tiền';
+    } else if (!shipperHold && !wareHouseHold && !handlePayment) {
+      return 'Chờ kho xác nhận';
+    } else if (!shipperHold && wareHouseHold && !handlePayment) {
+      return 'Kho đang giữ tiền';
+    } else if (!shipperHold && !wareHouseHold && handlePayment) {
+      return 'Hoàn thành';
     }
     return 'Unknown status';
   }
@@ -51,8 +55,8 @@ class CashOrderEntity extends Equatable {
       money,
       shipperUsername,
       shipperHold,
-      waveHouseUsername,
-      waveHouseHold,
+      wareHouseUsername,
+      wareHouseHold,
       handlePayment,
       status,
       createAt,
@@ -71,8 +75,8 @@ class CashOrderEntity extends Equatable {
       'money': money,
       'shipperUsername': shipperUsername,
       'shipperHold': shipperHold,
-      'waveHouseUsername': waveHouseUsername,
-      'waveHouseHold': waveHouseHold,
+      'waveHouseUsername': wareHouseUsername,
+      'waveHouseHold': wareHouseHold,
       'handlePayment': handlePayment,
       'status': status.name,
       'createAt': createAt.toIso8601String(),
@@ -88,8 +92,8 @@ class CashOrderEntity extends Equatable {
       money: map['money'] as int,
       shipperUsername: map['shipperUsername'] as String,
       shipperHold: map['shipperHold'] as bool,
-      waveHouseUsername: map['waveHouseUsername'] as String?,
-      waveHouseHold: map['waveHouseHold'] as bool,
+      wareHouseUsername: map['waveHouseUsername'] as String?,
+      wareHouseHold: map['waveHouseHold'] as bool,
       handlePayment: map['handlePayment'] as bool,
       status: Status.values.firstWhere((element) => element.name == map['status'] as String),
       createAt: DateTime.parse(map['createAt'] as String),
