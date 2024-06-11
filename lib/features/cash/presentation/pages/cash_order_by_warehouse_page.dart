@@ -18,11 +18,11 @@ class CashOrderByWarehousePage extends StatefulWidget {
 
 class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>>
+  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _warehouseUnderConfirmationListController;
-  late FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>>
+  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _warehouseHoldingListController;
-  late FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>>
+  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _warehouseTransferredListController;
 
   final _tabs = <Tab>[
@@ -31,67 +31,88 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
     const Tab(text: 'Đã chuyển cho người bán'),
   ];
 
+  List<CashOrderByDateEntity> filterMethod(currentItems, filteredItems, params) {
+    DateTime? filterDate = params.filterDate;
+    String? filterShipper = params.filterShipper;
+
+    List<CashOrderByDateEntity> rs = [...currentItems];
+
+    if (filterDate != null) {
+      filterDate = DateTime(filterDate.year, filterDate.month, filterDate.day);
+      rs.removeWhere((e) => e.date != filterDate);
+    }
+
+    if (filterShipper?.isNotEmpty == true) {
+      for (int i = 0; i < rs.length; i++) {
+        final filterCashOrders = rs[i].cashOrders.where((cash) => cash.shipperUsername == filterShipper).toList();
+        rs[i] = rs[i].copyWith(cashOrders: filterCashOrders);
+      }
+      rs.removeWhere((e) => e.cashOrders.isEmpty); // after filter, maybe some date has no cash order
+    }
+    return rs;
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
-    _warehouseUnderConfirmationListController = FutureListController(
-      items: <CashOrderByDateEntity>[],
-      futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseUnderConfirmationReceived),
-      parse: (unparsedData, onParseError) {
-        return unparsedData.fold(
-          (error) {
-            onParseError(errorMsg: error.message);
-            return null;
-          },
-          (ok) {
-            return ok.data!;
-          },
-        );
-      },
-    )..init();
-    _warehouseHoldingListController = FutureListController(
-      items: <CashOrderByDateEntity>[],
-      futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseHolding),
-      parse: (unparsedData, onParseError) {
-        return unparsedData.fold(
-          (error) {
-            onParseError(errorMsg: error.message);
-            return null;
-          },
-          (ok) {
-            return ok.data!;
-          },
-        );
-      },
-    )..init();
-    _warehouseTransferredListController = FutureListController(
-      items: <CashOrderByDateEntity>[],
-      futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseHasTransferredToShop),
-      parse: (unparsedData, onParseError) {
-        return unparsedData.fold(
-          (error) {
-            onParseError(errorMsg: error.message);
-            return null;
-          },
-          (ok) {
-            return ok.data!;
-          },
-        );
-      },
-    )..init();
 
-    _warehouseUnderConfirmationListController.addListener(() => setState(() {}));
-    _warehouseHoldingListController.addListener(() => setState(() {}));
-    _warehouseTransferredListController.addListener(() => setState(() {}));
-  }
+    _warehouseUnderConfirmationListController = FilterListController(
+        items: <CashOrderByDateEntity>[],
+        filterParams: FilterCashTransferParams(),
+        futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseUnderConfirmationReceived),
+        parse: (unparsedData, onParseError) {
+          return unparsedData.fold(
+            (error) {
+              onParseError(errorMsg: error.message);
+              return null;
+            },
+            (ok) {
+              return ok.data!;
+            },
+          );
+        })
+      ..setFilterCallback(filterMethod)
+      ..setFirstRunCallback(() => _warehouseUnderConfirmationListController.performFilter())
+      ..init();
 
-  @override
-  void dispose() {
-    _warehouseUnderConfirmationListController.dispose();
-    _warehouseHoldingListController.dispose();
-    _warehouseTransferredListController.dispose();
-    super.dispose();
+    _warehouseHoldingListController = FilterListController(
+        items: <CashOrderByDateEntity>[],
+        filterParams: FilterCashTransferParams(),
+        futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseHolding),
+        parse: (unparsedData, onParseError) {
+          return unparsedData.fold(
+            (error) {
+              onParseError(errorMsg: error.message);
+              return null;
+            },
+            (ok) {
+              return ok.data!;
+            },
+          );
+        })
+      ..setFilterCallback(filterMethod)
+      ..setFirstRunCallback(() => _warehouseHoldingListController.performFilter())
+      ..init();
+
+    _warehouseTransferredListController = FilterListController(
+        items: <CashOrderByDateEntity>[],
+        filterParams: FilterCashTransferParams(),
+        futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseHasTransferredToShop),
+        parse: (unparsedData, onParseError) {
+          return unparsedData.fold(
+            (error) {
+              onParseError(errorMsg: error.message);
+              return null;
+            },
+            (ok) {
+              return ok.data!;
+            },
+          );
+        })
+      ..setFilterCallback(filterMethod)
+      ..setFirstRunCallback(() => _warehouseTransferredListController.performFilter())
+      ..init();
   }
 
   @override
@@ -114,7 +135,6 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
                 //# under confirmation
                 CustomScrollTabView.warehouse(
                   futureListController: _warehouseUnderConfirmationListController,
-                  // items: _warehouseUnderConfirmationListController.items,
                   isSlidable: true,
                   onConfirmPressed: handleConfirmPressed,
                   onRefresh: () {
@@ -124,7 +144,6 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
                 //# warehouse holding
                 CustomScrollTabView.warehouse(
                   futureListController: _warehouseHoldingListController,
-                  // items: _warehouseHoldingListController.items,
                   isSlidable: false,
                   onRefresh: () {
                     _warehouseHoldingListController.refresh();
@@ -133,7 +152,6 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
                 //# transferred to vendor
                 CustomScrollTabView.warehouse(
                   futureListController: _warehouseTransferredListController,
-                  // items: _warehouseTransferredListController.items,
                   isSlidable: false,
                   onRefresh: () {
                     _warehouseTransferredListController.refresh();
@@ -147,14 +165,16 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
     );
   }
 
-  void handleConfirmPressed(List<String> cashOrderIds) async {
+  void handleConfirmPressed(List<String> cashOrderIds, CashOrderByDateEntity cashOnDate) async {
     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
     if (warehouseUsername == null) return;
 
     await showDialogToConfirm(
       context: context,
       title: 'Xác nhận đối soát',
-      content: 'Bạn đã nhận đủ tiền từ shipper chưa?',
+      content:
+          'Bạn đã nhận đủ ${ConversionUtils.formatCurrency(cashOnDate.totalMoney)} từ shipper chưa? Tiền sẽ được tự động chuyển cho người bán khi đơn hàng được hoàn thành.\n\nLưu ý: Toàn bộ (${cashOnDate.count} đơn hàng) trong danh sách sẽ được xác nhận.',
+      contentTextAlign: TextAlign.start,
       confirmText: 'Xác nhận',
       dismissText: 'Thoát',
       onConfirm: () async {

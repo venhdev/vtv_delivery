@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:vtv_common/core.dart';
@@ -9,8 +7,29 @@ import 'cash_item.dart';
 import 'filter_cash_transfer_dialog.dart';
 import 'summary_cash_on_date.dart';
 
+class FilterCashTransferParams {
+  final DateTime? filterDate;
+  final String? filterShipper;
+
+  FilterCashTransferParams({this.filterDate, this.filterShipper});
+
+  FilterCashTransferParams copyWith({
+    DateTime? selectedDate,
+    String? shipperUsername,
+    bool keep = true,
+  }) {
+    return FilterCashTransferParams(
+      filterDate: keep ? (selectedDate ?? filterDate) : selectedDate,
+      filterShipper: keep ? (shipperUsername ?? filterShipper) : shipperUsername,
+    );
+  }
+
+  @override
+  String toString() => 'FilterCashTransferParams(selectedDate: $filterDate, shipperUsername: $filterShipper)';
+}
+
 class CustomScrollTabView extends StatefulWidget {
-  const CustomScrollTabView({
+  const CustomScrollTabView._inner({
     super.key,
     required this.listController,
     required this.typeWork,
@@ -22,14 +41,16 @@ class CustomScrollTabView extends StatefulWidget {
 
   factory CustomScrollTabView.shipper({
     Key? key,
-    required FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>> futureListController,
+    required FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>,
+            FilterCashTransferParams>
+        futureListController,
     bool isSlidable = false,
     ValueSelected<DateTime>? onScanPressed,
     ValueSelected<DateTime>? onInsertPressed,
     VoidCallback? onRefresh,
   }) {
     assert((onScanPressed != null && onInsertPressed != null) || !isSlidable);
-    return CustomScrollTabView(
+    return CustomScrollTabView._inner(
       key: key,
       listController: futureListController,
       typeWork: TypeWork.SHIPPER,
@@ -40,12 +61,14 @@ class CustomScrollTabView extends StatefulWidget {
   }
   factory CustomScrollTabView.warehouse({
     Key? key,
-    required FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>> futureListController,
+    required FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>,
+            FilterCashTransferParams>
+        futureListController,
     bool isSlidable = false,
-    ValueSelected<List<String>>? onConfirmPressed,
+    void Function(List<String>, CashOrderByDateEntity)? onConfirmPressed,
     VoidCallback? onRefresh,
   }) {
-    return CustomScrollTabView(
+    return CustomScrollTabView._inner(
       key: key,
       listController: futureListController,
       typeWork: TypeWork.WAREHOUSE,
@@ -53,14 +76,15 @@ class CustomScrollTabView extends StatefulWidget {
       onConfirmPressed: onConfirmPressed,
     );
   }
-  final FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>> listController;
+  final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+      listController;
 
   final TypeWork typeWork;
   final bool isSlidable;
 
   final ValueSelected<DateTime>? onScanPressed;
   final ValueSelected<DateTime>? onInsertPressed;
-  final ValueSelected<List<String>>? onConfirmPressed;
+  final void Function(List<String>, CashOrderByDateEntity)? onConfirmPressed;
 
   @override
   State<CustomScrollTabView> createState() => _CustomScrollTabViewState();
@@ -71,10 +95,6 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
   final FocusNode _shipperFocusNode = FocusNode(debugLabel: 'Menu Shipper Picker');
   late final AnimationController _animationController;
   late final Animation<Offset> _offsetAnimation;
-
-  //# warehouse
-  DateTime? _filterDate;
-  String? _filterShipper;
 
   List<String> getCashOrderIdsByDate(DateTime date, List<CashOrderByDateEntity> items) {
     return items
@@ -87,8 +107,6 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
   @override
   void initState() {
     super.initState();
-    // if (widget.typeWork == TypeWork.WAREHOUSE)
-    // _filteredItems.addAll(widget.listController.items);
 
     if (widget.isSlidable) {
       _animationController = AnimationController(
@@ -102,32 +120,10 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
       ).animate(_animationController);
     }
 
-    //> check if not set filter callback > add
-    if (!widget.listController.filterable) {
-      widget.listController.setFilterCallback((currentItems, _) {
-        List<CashOrderByDateEntity> rs = currentItems;
-
-        if (_filterDate != null) {
-          _filterDate = DateTime(_filterDate!.year, _filterDate!.month, _filterDate!.day);
-          rs.removeWhere((e) => e.date != _filterDate);
-        }
-
-        if (_filterShipper?.isNotEmpty == true) {
-          for (int i = 0; i < rs.length; i++) {
-            final filterCashOrders = rs[i].cashOrders.where((cash) => cash.shipperUsername == _filterShipper).toList();
-            rs[i] = rs[i].copyWith(cashOrders: filterCashOrders);
-          }
-          rs.removeWhere((e) => e.cashOrders.isEmpty); // after filter, maybe some date has no cash order
-        }
-        return rs;
-      });
-    }
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.listController.addListener(() {
         if (mounted) setState(() {});
       });
-      widget.listController.performFilter();
     });
   }
 
@@ -137,19 +133,15 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     widget.listController.removeListener(() {
       if (mounted) setState(() {});
     });
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.listController.isLoading) {
+    if (widget.listController.isLoading || widget.listController.isFiltering) {
       return const Center(
         child: CircularProgressIndicator(),
-      );
-    } else if (widget.listController.items.isEmpty) {
-      return MessageScreen(
-        message: 'Không có dữ liệu',
-        onPressed: widget.listController.refresh,
       );
     }
     if (widget.typeWork == TypeWork.SHIPPER) {
@@ -159,20 +151,24 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     }
   }
 
+  Widget emptyFilterView() {
+    return const Center(
+        child: Text('Không tìm thấy đơn nào...', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)));
+  }
+
   Widget _shipperView() {
     return RefreshIndicator(
-      onRefresh: () async => widget.listController.refresh(),
+      onRefresh: () async {
+        await widget.listController.refresh();
+        widget.listController.performFilter();
+      },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(child: _totalCashTransferCountAndEditClearFilter(canChangeShipper: false)),
             SliverToBoxAdapter(child: _filterInput(canChangeShipper: false)),
-            if (widget.listController.filteredItems?.isEmpty == true)
-              const SliverFillRemaining(
-                  child: Center(
-                      child: Text('Danh sách trống...',
-                          textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)))),
+            if (widget.listController.filteredItems?.isEmpty == true) SliverFillRemaining(child: emptyFilterView()),
             for (final cashOnDate in widget.listController.filteredItems!) ...[
               SliverToBoxAdapter(
                 child: Slidable(
@@ -199,7 +195,8 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
   Widget _warehouseView() {
     return RefreshIndicator(
       onRefresh: () async {
-        widget.listController.refresh();
+        await widget.listController.refresh();
+        widget.listController.performFilter();
       },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -207,16 +204,12 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           slivers: [
             SliverToBoxAdapter(child: _totalCashTransferCountAndEditClearFilter()),
             SliverToBoxAdapter(child: _filterInput()),
-            if (widget.listController.filteredItems?.isEmpty == true)
-              const SliverFillRemaining(
-                  child: Center(
-                      child: Text('Danh sách trống...',
-                          textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)))),
+            if (widget.listController.filteredItems?.isEmpty == true) SliverFillRemaining(child: emptyFilterView()),
             for (final cashOnDate in widget.listController.filteredItems!) ...[
               SliverToBoxAdapter(
                 child: Slidable(
                   key: ValueKey(cashOnDate.date),
-                  endActionPane: widget.isSlidable ? _warehouseSlideEnd(cashOnDate.date) : null,
+                  endActionPane: widget.isSlidable ? _warehouseSlideEnd(cashOnDate) : null,
                   child: SummaryCashOnDate(
                     cashOnDate: cashOnDate,
                     endBuilder: widget.isSlidable
@@ -235,57 +228,6 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     );
   }
 
-  Widget _totalCashTransferCountAndEditClearFilter({bool canChangeShipper = true}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        //# total cash orders
-        Text('Tổng số đơn: ${widget.listController.filteredItems!.expand((e) => e.cashOrders).length}'),
-
-        //# icon search/ clear filter
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            IconButton(
-              style: VTVTheme.shrinkButton,
-              icon: const Icon(Icons.search),
-              onPressed: () async {
-                final rs = await showDialog<({DateTime? selectedDate, String? shipperUsername})>(
-                    context: context,
-                    builder: (context) => FilterCashTransferDialog(
-                          initDate: _filterDate,
-                          initShipperUsername: _filterShipper,
-                          canChangeShipper: canChangeShipper,
-                        ));
-                if (rs == null) return;
-
-                if (rs.selectedDate != _filterDate || rs.shipperUsername != _filterShipper) {
-                  setState(() {
-                    _filterDate = rs.selectedDate;
-                    _filterShipper = rs.shipperUsername;
-                    widget.listController.performFilter();
-                  });
-                }
-              },
-            ),
-            if (_filterDate != null || _filterShipper != null)
-              IconButton(
-                style: VTVTheme.shrinkButton,
-                icon: const Icon(Icons.filter_alt_off),
-                onPressed: () {
-                  setState(() {
-                    _filterDate = null;
-                    _filterShipper = null;
-                    widget.listController.performFilter();
-                  });
-                },
-              ),
-          ],
-        )
-      ],
-    );
-  }
-
   ActionPane _shipperSlideEnd(DateTime date) {
     return ActionPane(
       // A motion is a widget used to control how the pane animates.
@@ -294,6 +236,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
 
       // All actions are defined in the children parameter.
       children: [
+        const SizedBox(width: 2),
         SlidableAction(
           borderRadius: BorderRadius.circular(8),
           backgroundColor: Colors.cyan,
@@ -311,16 +254,16 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           label: 'Nhập',
           onPressed: widget.onInsertPressed != null ? (_) => widget.onInsertPressed!(date) : null,
         ),
-        const SizedBox(width: 4),
       ],
     );
   }
 
-  ActionPane _warehouseSlideEnd(DateTime date) {
+  ActionPane _warehouseSlideEnd(CashOrderByDateEntity cashOnDate) {
     return ActionPane(
       motion: const ScrollMotion(),
       extentRatio: 0.3,
       children: [
+        const SizedBox(width: 2),
         SlidableAction(
           borderRadius: BorderRadius.circular(8),
           backgroundColor: Colors.green,
@@ -328,10 +271,10 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           icon: Icons.check,
           label: 'Xác nhận',
           onPressed: widget.onConfirmPressed != null
-              ? (_) => widget.onConfirmPressed!(getCashOrderIdsByDate(date, widget.listController.filteredItems!))
+              ? (_) => widget.onConfirmPressed!(
+                  getCashOrderIdsByDate(cashOnDate.date, widget.listController.filteredItems!), cashOnDate)
               : null,
         ),
-        const SizedBox(width: 8),
       ],
     );
   }
@@ -340,7 +283,72 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         childCount: cashOnDate.cashOrders.length,
-        (context, index) => CashItem(cash: cashOnDate.cashOrders[index]),
+        (context, index) => CashItem(
+          cash: cashOnDate.cashOrders[index],
+          isWarehouse: widget.typeWork == TypeWork.WAREHOUSE,
+        ),
+      ),
+    );
+  }
+
+  Widget _totalCashTransferCountAndEditClearFilter({bool canChangeShipper = true}) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            //# total cash orders
+            Text('Số đơn tìm thấy: ${widget.listController.items.expand((e) => e.cashOrders).length}'),
+            const VerticalDivider(),
+            if (widget.listController.filterParams.filterDate != null ||
+                widget.listController.filterParams.filterShipper != null) ...[
+              Text('Số đơn đã lọc: ${widget.listController.filteredItems!.expand((e) => e.cashOrders).length}'),
+              const VerticalDivider(),
+            ],
+            //# icon search/ clear filter
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  style: VTVTheme.shrinkButton,
+                  icon: const Icon(Icons.search),
+                  onPressed: () async {
+                    final rs = await showDialog<({DateTime? selectedDate, String? shipperUsername})>(
+                        context: context,
+                        builder: (context) => FilterCashTransferDialog(
+                              initDate: widget.listController.filterParams.filterDate,
+                              initShipperUsername: widget.listController.filterParams.filterShipper,
+                              canChangeShipper: canChangeShipper,
+                            ));
+                    if (rs == null) return;
+
+                    if (rs.selectedDate != widget.listController.filterParams.filterDate ||
+                        rs.shipperUsername != widget.listController.filterParams.filterShipper) {
+                      setState(() {
+                        widget.listController.filterParams = widget.listController.filterParams
+                            .copyWith(selectedDate: rs.selectedDate, shipperUsername: rs.shipperUsername, keep: false);
+                        widget.listController.performFilter();
+                      });
+                    }
+                  },
+                ),
+                if (widget.listController.filterParams.filterDate != null ||
+                    widget.listController.filterParams.filterShipper != null)
+                  IconButton(
+                    style: VTVTheme.shrinkButton,
+                    icon: const Icon(Icons.filter_alt_off),
+                    onPressed: () {
+                      setState(() {
+                        widget.listController.filterParams = widget.listController.filterParams
+                            .copyWith(selectedDate: null, shipperUsername: null, keep: false);
+                        widget.listController.performFilter();
+                      });
+                    },
+                  ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -352,7 +360,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-                'Ngày: ${_filterDate != null ? ConversionUtils.convertDateTimeToString(_filterDate!) : '(chưa chọn)'}'),
+                'Ngày: ${widget.listController.filterParams.filterDate != null ? ConversionUtils.convertDateTimeToString(widget.listController.filterParams.filterDate!) : '(chưa chọn)'}'),
             MenuAnchor(
               childFocusNode: _dateFocusNode,
               builder: (BuildContext context, MenuController controller, Widget? child) {
@@ -372,9 +380,10 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
                   .map((e) => MenuItemButton(
                         child: Text(ConversionUtils.convertDateTimeToString(e.date)),
                         onPressed: () {
-                          if (_filterDate == e.date) return;
+                          if (widget.listController.filterParams.filterDate == e.date) return;
                           setState(() {
-                            _filterDate = e.date;
+                            widget.listController.filterParams =
+                                widget.listController.filterParams.copyWith(selectedDate: e.date);
                             widget.listController.performFilter();
                           });
                         },
@@ -387,7 +396,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Shipper: ${_filterShipper ?? '(chưa chọn)'}'),
+              Text('Shipper: ${widget.listController.filterParams.filterShipper ?? '(chưa chọn)'}'),
               MenuAnchor(
                 childFocusNode: _shipperFocusNode,
                 builder: (BuildContext context, MenuController controller, Widget? child) {
@@ -409,9 +418,10 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
                     .map((e) => MenuItemButton(
                           child: Text(e),
                           onPressed: () {
-                            if (_filterShipper == e) return;
+                            if (widget.listController.filterParams.filterShipper == e) return;
                             setState(() {
-                              _filterShipper = e;
+                              widget.listController.filterParams =
+                                  widget.listController.filterParams.copyWith(shipperUsername: e);
                               widget.listController.performFilter();
                             });
                           },

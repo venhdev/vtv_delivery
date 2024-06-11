@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:vtv_common/core.dart';
 
@@ -18,8 +16,9 @@ class CashOrderByShipperPage extends StatefulWidget {
 
 class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>> _shipperHoldingListController;
-  late FutureListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>>
+  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+      _shipperHoldingListController;
+  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _shipperTransferredListController;
 
   final _tabs = <Tab>[
@@ -27,12 +26,34 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
     const Tab(text: 'Đã nộp kho'),
   ];
 
+  List<CashOrderByDateEntity> filterMethod(currentItems, filteredItems, params) {
+    DateTime? filterDate = params.filterDate;
+    String? filterShipper = params.filterShipper;
+
+    List<CashOrderByDateEntity> rs = [...currentItems];
+
+    if (filterDate != null) {
+      filterDate = DateTime(filterDate.year, filterDate.month, filterDate.day);
+      rs.removeWhere((e) => e.date != filterDate);
+    }
+
+    if (filterShipper?.isNotEmpty == true) {
+      for (int i = 0; i < rs.length; i++) {
+        final filterCashOrders = rs[i].cashOrders.where((cash) => cash.shipperUsername == filterShipper).toList();
+        rs[i] = rs[i].copyWith(cashOrders: filterCashOrders);
+      }
+      rs.removeWhere((e) => e.cashOrders.isEmpty); // after filter, maybe some date has no cash order
+    }
+    return rs;
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
-    _shipperHoldingListController = FutureListController(
+    _shipperHoldingListController = FilterListController(
       items: <CashOrderByDateEntity>[],
+      filterParams: FilterCashTransferParams(),
       futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperHolding),
       parse: (unparsedData, onParseError) {
         return unparsedData.fold(
@@ -45,9 +66,15 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
           },
         );
       },
-    )..init();
-    _shipperTransferredListController = FutureListController(
+    )
+      ..setDebugLabel('shipperHolding')
+      ..setFilterCallback(filterMethod)
+      ..setFirstRunCallback(() => _shipperHoldingListController.performFilter())
+      ..init();
+
+    _shipperTransferredListController = FilterListController(
       items: <CashOrderByDateEntity>[],
+      filterParams: FilterCashTransferParams(),
       futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperTransferred),
       parse: (unparsedData, onParseError) {
         return unparsedData.fold(
@@ -60,7 +87,11 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
           },
         );
       },
-    )..init();
+    )
+      ..setDebugLabel('shipperTransferred')
+      ..setFilterCallback(filterMethod)
+      ..setFirstRunCallback(() => _shipperTransferredListController.performFilter())
+      ..init();
   }
 
   @override
@@ -127,8 +158,8 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
   }
 
   void handleScanPressed(DateTime date) async {
-    final warehouseUsername = Navigator.of(context).pushNamed('/scan') as String?;
-    if (warehouseUsername == null) return;
+    final warehouseUsername = await Navigator.of(context).pushNamed('/scan') as String?;
+    if (warehouseUsername == null || !mounted) return;
 
     showDialogToConfirm(
       context: context,
