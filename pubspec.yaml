@@ -19,9 +19,8 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: '0.0.4-dev'
 
 environment:
-  sdk: '>=3.5.0-152 <4.0.0'
-  # sdk: ^3.5.0-152
-  # sdk: ">=3.3.3 <4.0.0"
+  sdk: ">=3.4.3 <4.0.0"
+  # sdk: '>=3.5.0-152 <4.0.0'
 
 dependencies:
   vtv_common:
@@ -57,10 +56,9 @@ dependencies:
   provider: ^6.1.1
   get_it: ^7.6.7
   equatable: ^2.0.5
-  json: ^0.20.1
+  # json: ^0.20.1
 
   # network
-  http:
   dio: ^5.4.2+1
   connectivity_plus: ^6.0.1
   http_parser: ^4.0.2
@@ -75,14 +73,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^3.0.1
+  flutter_lints: ^4.0.0
 
 # following page: https://dart.dev/tools/pub/pubspec
 flutter:
   uses-material-design: true
 
   assets:
-    - google_fonts/
+    # - google_fonts/
     - assets/
     - assets/images/
     - assets/images/placeholders/

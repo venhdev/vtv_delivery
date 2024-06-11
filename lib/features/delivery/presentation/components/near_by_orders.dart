@@ -7,7 +7,7 @@ import 'package:vtv_common/shop.dart';
 import '../../../../dependency_container.dart';
 import '../../domain/entities/shop_and_transport_entity.dart';
 import '../../domain/entities/ward_work_entity.dart';
-import '../../domain/repository/deliver_repository.dart';
+import '../../domain/repository/delivery_repository.dart';
 
 class NearbyOrders extends StatelessWidget {
   const NearbyOrders({super.key, this.wardWork});
@@ -18,8 +18,8 @@ class NearbyOrders extends StatelessWidget {
   Widget build(BuildContext context) {
     return FutureBuilder(
       future: wardWork != null
-          ? sl<DeliverRepository>().getTransportByWardCode(wardWork!.wardCode)
-          : sl<DeliverRepository>().getTransportByWardWork(),
+          ? sl<DeliveryRepository>().getTransportByWardCode(wardWork!.wardCode)
+          : sl<DeliveryRepository>().getTransportByWardWork(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return snapshot.data!.fold(
@@ -132,7 +132,7 @@ class TransportItem extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Text('Trạng thái:'),
-        OrderStatusBadge(status: status, type: OrderStatusBadgeType.driver),
+        OrderStatusBadge(status: status, type: OrderStatusBadgeType.shipper),
       ],
     );
   }

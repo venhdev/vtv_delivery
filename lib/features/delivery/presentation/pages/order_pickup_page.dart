@@ -4,7 +4,7 @@ import 'package:vtv_common/core.dart';
 
 import '../../../../dependency_container.dart';
 import '../../domain/entities/deliver_entity.dart';
-import '../../domain/repository/deliver_repository.dart';
+import '../../domain/repository/delivery_repository.dart';
 import '../components/near_by_orders.dart';
 
 class OrderPickUpPendingPage extends StatefulWidget {
@@ -25,7 +25,7 @@ class _OrderPickUpPendingPageState extends State<OrderPickUpPendingPage> {
       confirmText: 'Xác nhận',
       dismissText: 'Thoát',
       onConfirm: () async {
-        final respEither = await sl<DeliverRepository>().updateStatusTransportByDeliver(
+        final respEither = await sl<DeliveryRepository>().updateStatusTransportByDeliver(
           transportOrderId,
           OrderStatus.PICKED_UP,
           true,
@@ -56,7 +56,7 @@ class _OrderPickUpPendingPageState extends State<OrderPickUpPendingPage> {
         child: const Icon(Icons.qr_code_scanner),
       ),
       body: FutureBuilder(
-          future: sl<DeliverRepository>().getDeliverInfo(),
+          future: sl<DeliveryRepository>().getDeliverInfo(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return snapshot.data!.fold(

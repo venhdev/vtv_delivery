@@ -15,9 +15,9 @@ import 'core/handler/delivery_redirect.dart';
 import 'features/cash/data/datasources/cash_data_source.dart';
 import 'features/cash/data/repository/cash_repository_impl.dart';
 import 'features/cash/domain/repository/cash_repository.dart';
-import 'features/delivery/data/data_sources/deliver_data_source.dart';
-import 'features/delivery/data/repository/deliver_repository_impl.dart';
-import 'features/delivery/domain/repository/deliver_repository.dart';
+import 'features/delivery/data/data_sources/delivery_data_source.dart';
+import 'features/delivery/data/repository/delivery_repository_impl.dart';
+import 'features/delivery/domain/repository/delivery_repository.dart';
 
 // Service locator
 GetIt sl = GetIt.instance;
@@ -62,14 +62,14 @@ Future<void> initializeLocator() async {
   sl.registerSingleton<GuestDataSource>(GuestDataSourceImpl(sl()));
   sl.registerSingleton<AuthDataSource>(AuthDataSourceImpl(sl(), sl(), sl(), sl()));
 
-  sl.registerSingleton<DeliverDataSource>(DeliverDataSourceImpl(sl()));
+  sl.registerSingleton<DeliveryDataSource>(DeliverDataSourceImpl(sl()));
   sl.registerSingleton<CashDataSource>(CashDataSourceImpl(sl()));
 
   //! Repository
   sl.registerSingleton<GuestRepository>(GuestRepositoryImpl(sl()));
   sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl(), sl()));
 
-  sl.registerSingleton<DeliverRepository>(DeliverRepositoryImpl(sl()));
+  sl.registerSingleton<DeliveryRepository>(DeliveryRepositoryImpl(sl()));
   sl.registerSingleton<CashRepository>(CashRepositoryImpl(sl()));
 
   //! UseCase

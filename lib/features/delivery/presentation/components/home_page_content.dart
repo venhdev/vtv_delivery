@@ -3,7 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:vtv_common/core.dart';
 
 import '../../../../dependency_container.dart';
-import '../../domain/repository/deliver_repository.dart';
+import '../../domain/repository/delivery_repository.dart';
 import '../components/menu_action_item.dart';
 
 class HomePageContent extends StatelessWidget {
@@ -19,7 +19,7 @@ class HomePageContent extends StatelessWidget {
       confirmText: 'Xác nhận',
       dismissText: 'Thoát',
       onConfirm: () async {
-        final respEither = await sl<DeliverRepository>().updateStatusTransportByDeliver(
+        final respEither = await sl<DeliveryRepository>().updateStatusTransportByDeliver(
           transportOrderId,
           OrderStatus.PICKED_UP,
           true,
@@ -44,7 +44,7 @@ class HomePageContent extends StatelessWidget {
       confirmText: 'Xác nhận',
       dismissText: 'Thoát',
       onConfirm: () async {
-        final respEither = await sl<DeliverRepository>().updateStatusTransportByDeliver(
+        final respEither = await sl<DeliveryRepository>().updateStatusTransportByDeliver(
           transportOrderId,
           OrderStatus.DELIVERED,
           true,

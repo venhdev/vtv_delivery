@@ -49,7 +49,6 @@ class DeliverProfilePage extends StatelessWidget {
                   children: [
                     //# deliver info
                     _DeliverInfo(deliver: deliver, userInfo: state.auth!.userInfo),
-
                     const SizedBox(height: 8),
 
                     BlocBuilder<AuthCubit, AuthState>(builder: (context, state) {

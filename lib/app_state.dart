@@ -98,8 +98,8 @@ class AppState extends ChangeNotifier {
   //*---------------------Delivery Info (Shipper || Warehouse)-----------------------*//
   DeliverEntity? _deliveryInfo;
   DeliverEntity? get deliveryInfo => _deliveryInfo;
-  String? get typeWork =>
-      TypeWork.values.firstWhere((e) => e.name == _deliveryInfo?.typeWork, orElse: () => TypeWork.Unknown).name;
+  TypeWork get typeWork =>
+      TypeWork.values.firstWhere((e) => e.name == _deliveryInfo?.typeWork, orElse: () => TypeWork.Unknown);
 
   Future<void> fetchDeliveryInfo() async {
     _deliveryInfo = await _fetchInfoCallback();

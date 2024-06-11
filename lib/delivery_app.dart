@@ -14,7 +14,7 @@ class DeliveryApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'VTV Delivery',
+        title: 'Delivery',
         navigatorKey: GlobalVariables.navigatorState,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -23,15 +23,12 @@ class DeliveryApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: routes,
-        builder: (context, child) => AppBuild(child: child!));
+        builder: (context, child) => AppScaffold(child: child!));
   }
 }
 
-class AppBuild extends StatelessWidget {
-  const AppBuild({
-    super.key,
-    required this.child,
-  });
+class AppScaffold extends StatelessWidget {
+  const AppScaffold({super.key, required this.child});
 
   final Widget child;
 
@@ -54,9 +51,7 @@ class AppBuild extends StatelessWidget {
           return Overlay(
             key: GlobalVariables.rootOverlay,
             initialEntries: [
-              OverlayEntry(
-                builder: (context) => child,
-              ),
+              OverlayEntry(builder: (context) => child),
             ],
           );
         }
@@ -75,7 +70,7 @@ class ServerDown extends StatefulWidget {
 }
 
 class _ServerDownState extends State<ServerDown> {
-  bool isDevPage = false;
+  bool isDevPage = false; // used to switch to dev page through long press
 
   @override
   Widget build(BuildContext context) {

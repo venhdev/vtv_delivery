@@ -9,11 +9,11 @@ import '../../../../app_state.dart';
 import '../../../../dependency_container.dart';
 import '../../../cash/presentation/pages/cash_order_by_shipper_page.dart';
 import '../../../cash/presentation/pages/cash_order_by_warehouse_page.dart';
-import '../../domain/repository/deliver_repository.dart';
+import '../../domain/repository/delivery_repository.dart';
 import '../components/home_page_content.dart';
 
-class DeliveryHomePage extends StatelessWidget {
-  const DeliveryHomePage({super.key});
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +26,6 @@ class DeliveryHomePage extends StatelessWidget {
               SnackBar(content: Text(state.message ?? 'Có lỗi xảy ra! Vui lòng thử lại!')),
             );
         }
-
-        // final appState = Provider.of<AppState>(context, listen: false);
-        // if (state.status == AuthStatus.authenticated) {
-        //   if (appState.deliveryInfo == null) appState.fetchDeliveryInfo();
-        // } else if (state.status == AuthStatus.unauthenticated) {
-        //   appState.fetchDeliveryInfo();
-        // }
       },
       builder: (context, state) {
         if (state.status == AuthStatus.authenticated) {
@@ -42,8 +35,7 @@ class DeliveryHomePage extends StatelessWidget {
               onPressed: () => context.read<AuthCubit>().logout(state.auth!.refreshToken),
             );
           }
-
-          // return page base on type work
+          // HomePage base on role
           return _HomePageWithBottomNavigation('Xin chào, ${state.auth!.userInfo.username!}');
         } else {
           return _noAuth(context);
@@ -54,7 +46,7 @@ class DeliveryHomePage extends StatelessWidget {
 
   Widget _noAuth(BuildContext context) {
     return GestureDetector(
-      onLongPress: () => Navigator.of(context).pushNamed('/dev'),
+      onLongPress: () => Navigator.of(context).pushNamed('/dev'), //NOTE: dev
       child: LoginPage(
         showTitle: false,
         formTitle: 'VTV Delivery',
@@ -86,24 +78,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
     });
   }
 
-  Widget? _bottomNavigationBar() {
-    return BottomNavigationBar(
-      onTap: _onItemTapped,
-      currentIndex: _selectedIndex,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Trang chủ',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.article_rounded),
-          label: 'Đơn hàng',
-        ),
-      ],
-    );
-  }
-
-  bool showAppBar() {
+  bool get isAppBarVisible {
     return _selectedIndex == 0;
   }
 
@@ -126,17 +101,17 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
     _widgetOptions = <Widget>[
       const HomePageContent(),
       Consumer<AppState>(
-        builder: (context, state, child) {
+        builder: (context, state, _) {
           switch (state.typeWork) {
-            case 'SHIPPER':
+            case TypeWork.SHIPPER:
               return const CashOrderByShipperPage();
-            case 'WAREHOUSE':
+            case TypeWork.WAREHOUSE:
               return const CashOrderByWarehousePage();
             default:
-              Logger().e('typeWork: ${state.typeWork}');
-              return Center(
-                child: Text('deliveryInfo: ${Provider.of<AppState>(context, listen: false).deliveryInfo.toString()}'),
-              );
+              return const MessageScreen(message: 'TypeWork không hợp lệ!');
+            // return Center(
+            //   child: Text('deliveryInfo: ${Provider.of<AppState>(context, listen: false).deliveryInfo.toString()}'),
+            // );
           }
         },
       ),
@@ -155,7 +130,13 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
         }
       },
       child: Scaffold(
-        appBar: showAppBar() ? AppBar(title: Text(widget.title), centerTitle: true, actions: _actions(context)) : null,
+        appBar: isAppBarVisible
+            ? AppBar(
+                title: Text(widget.title),
+                centerTitle: true,
+                actions: _actions(context),
+              )
+            : null,
         bottomNavigationBar: _bottomNavigationBar(),
         body: _widgetOptions.elementAt(_selectedIndex),
       ),
@@ -167,7 +148,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
       //# Profile
       IconButton(
         onPressed: () async {
-          var deliver = await sl<DeliverRepository>().getDeliverInfo();
+          var deliver = await sl<DeliveryRepository>().getDeliverInfo();
           deliver.fold(
             (error) => null,
             (ok) => Navigator.of(context).pushNamed(
@@ -179,5 +160,16 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
         icon: const Icon(Icons.account_circle_outlined),
       ),
     ];
+  }
+
+  Widget? _bottomNavigationBar() {
+    return BottomNavigationBar(
+      onTap: _onItemTapped,
+      currentIndex: _selectedIndex,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+        BottomNavigationBarItem(icon: Icon(Icons.article_rounded), label: 'Đơn hàng'),
+      ],
+    );
   }
 }

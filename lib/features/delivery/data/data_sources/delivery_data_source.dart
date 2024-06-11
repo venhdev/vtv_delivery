@@ -6,11 +6,11 @@ import '../../../../core/constants/delivery_api.dart';
 import '../../domain/entities/deliver_entity.dart';
 import '../../domain/entities/res/transport_resp.dart';
 
-abstract class DeliverDataSource {
-  //! deliver-controller
+abstract class DeliveryDataSource {
+  //# deliver-controller
   Future<SuccessResponse<DeliverEntity>> getDeliverInfo();
 
-  //! transport-controller
+  //# transport-controller
   Future<SuccessResponse<TransportResp>> getTransportByWardCode(String wardCode);
   Future<SuccessResponse<TransportResp>> getTransportByWardWork();
   Future<SuccessResponse<TransportEntity>> updateStatusTransportByDeliver(
@@ -21,7 +21,7 @@ abstract class DeliverDataSource {
   );
 }
 
-class DeliverDataSourceImpl implements DeliverDataSource {
+class DeliverDataSourceImpl implements DeliveryDataSource {
   final Dio _dio;
 
   DeliverDataSourceImpl(this._dio);
