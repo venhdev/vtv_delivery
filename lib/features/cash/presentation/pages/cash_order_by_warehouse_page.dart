@@ -6,7 +6,9 @@ import 'package:vtv_common/core.dart';
 import '../../../../dependency_container.dart';
 import '../../domain/entities/cash_order_by_date_entity.dart';
 import '../../domain/entities/request/transfer_money_request.dart';
+import '../../domain/entities/response/cash_order_response.dart';
 import '../../domain/repository/cash_repository.dart';
+import '../common/filter_cash_method.dart';
 import '../components/custom_scroll_tab_view.dart';
 
 class CashOrderByWarehousePage extends StatefulWidget {
@@ -31,26 +33,30 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
     const Tab(text: 'Đã chuyển cho người bán'),
   ];
 
-  List<CashOrderByDateEntity> filterMethod(currentItems, filteredItems, params) {
-    DateTime? filterDate = params.filterDate;
-    String? filterShipper = params.filterShipper;
+  // List<CashOrderByDateEntity> filterMethod(
+  //   List<CashOrderByDateEntity> currentItems,
+  //   List<CashOrderByDateEntity> filteredItems,
+  //   FilterCashTransferParams params,
+  // ) {
+  //   DateTime? filterDate = params.filterDate;
+  //   String? filterShipper = params.filterShipper;
 
-    List<CashOrderByDateEntity> rs = [...currentItems];
+  //   List<CashOrderByDateEntity> rs = [...currentItems];
 
-    if (filterDate != null) {
-      filterDate = DateTime(filterDate.year, filterDate.month, filterDate.day);
-      rs.removeWhere((e) => e.date != filterDate);
-    }
+  //   if (filterDate != null) {
+  //     filterDate = DateTime(filterDate.year, filterDate.month, filterDate.day);
+  //     rs.removeWhere((e) => e.date != filterDate);
+  //   }
 
-    if (filterShipper?.isNotEmpty == true) {
-      for (int i = 0; i < rs.length; i++) {
-        final filterCashOrders = rs[i].cashOrders.where((cash) => cash.shipperUsername == filterShipper).toList();
-        rs[i] = rs[i].copyWith(cashOrders: filterCashOrders);
-      }
-      rs.removeWhere((e) => e.cashOrders.isEmpty); // after filter, maybe some date has no cash order
-    }
-    return rs;
-  }
+  //   if (filterShipper?.isNotEmpty == true) {
+  //     for (int i = 0; i < rs.length; i++) {
+  //       final filterCashOrders = rs[i].cashOrders.where((cash) => cash.shipperUsername == filterShipper).toList();
+  //       rs[i] = rs[i].copyWith(cashOrders: filterCashOrders);
+  //     }
+  //     rs.removeWhere((e) => e.cashOrders.isEmpty); // after filter, maybe some date has no cash order
+  //   }
+  //   return rs;
+  // }
 
   @override
   void initState() {
@@ -72,7 +78,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
             },
           );
         })
-      ..setFilterCallback(filterMethod)
+      ..setFilterCallback(filterCashMethod)
       ..setFirstRunCallback(() => _warehouseUnderConfirmationListController.performFilter())
       ..init();
 
@@ -91,7 +97,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
             },
           );
         })
-      ..setFilterCallback(filterMethod)
+      ..setFilterCallback(filterCashMethod)
       ..setFirstRunCallback(() => _warehouseHoldingListController.performFilter())
       ..init();
 
@@ -110,7 +116,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
             },
           );
         })
-      ..setFilterCallback(filterMethod)
+      ..setFilterCallback(filterCashMethod)
       ..setFirstRunCallback(() => _warehouseTransferredListController.performFilter())
       ..init();
   }
@@ -137,25 +143,19 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
                   futureListController: _warehouseUnderConfirmationListController,
                   isSlidable: true,
                   onConfirmPressed: handleConfirmPressed,
-                  onRefresh: () {
-                    _warehouseUnderConfirmationListController.refresh();
-                  },
+                  onRefresh: () => _warehouseUnderConfirmationListController.refresh(),
                 ),
                 //# warehouse holding
                 CustomScrollTabView.warehouse(
                   futureListController: _warehouseHoldingListController,
                   isSlidable: false,
-                  onRefresh: () {
-                    _warehouseHoldingListController.refresh();
-                  },
+                  onRefresh: () => _warehouseHoldingListController.refresh(),
                 ),
                 //# transferred to vendor
                 CustomScrollTabView.warehouse(
                   futureListController: _warehouseTransferredListController,
                   isSlidable: false,
-                  onRefresh: () {
-                    _warehouseTransferredListController.refresh();
-                  },
+                  onRefresh: () => _warehouseTransferredListController.refresh(),
                 ),
               ],
             ),
@@ -169,7 +169,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
     if (warehouseUsername == null) return;
 
-    await showDialogToConfirm(
+    final isConfirm = await showDialogToConfirm(
       context: context,
       title: 'Xác nhận đối soát',
       content:
@@ -177,13 +177,25 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
       contentTextAlign: TextAlign.start,
       confirmText: 'Xác nhận',
       dismissText: 'Thoát',
-      onConfirm: () async {
-        await sl<CashRepository>()
-            .confirmTransfersMoneyByWarehouse(
-                TransferMoneyRequest(cashOrderIds: cashOrderIds, waveHouseUsername: warehouseUsername))
-            .then((respEither) =>
-                showToastResult(respEither, onFinished: () => _warehouseUnderConfirmationListController.refresh()));
-      },
     );
+
+    if ((isConfirm ?? false) && mounted) {
+      await showDialogToPerform<RespData<CashOrderResp>>(context,
+          dataCallback: () async {
+            // return sl<CashRepository>().requestTransfersMoneyToWarehouseByShipper(
+            //     TransferMoneyRequest(cashOrderIds: getCashOrderIdsByDate(date), waveHouseUsername: warehouseUsername));
+
+            return await sl<CashRepository>().confirmTransfersMoneyByWarehouse(
+                TransferMoneyRequest(cashOrderIds: cashOrderIds, waveHouseUsername: warehouseUsername));
+          },
+          onData: (data) {
+            showToastResult(data as RespData, onSuccess: () {
+              _warehouseUnderConfirmationListController.refreshAndFilter();
+              _warehouseHoldingListController.refreshAndFilter();
+              _warehouseTransferredListController.refreshAndFilter();
+            });
+          },
+          closeBy: (context, result) => Navigator.of(context).pop(result));
+    }
   }
 }

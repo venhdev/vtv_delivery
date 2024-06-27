@@ -11,7 +11,7 @@ class CashOrderEntity extends Equatable {
   final int money;
   final String shipperUsername;
   final bool shipperHold;
-  final String? wareHouseUsername; //TODO: rename to ware
+  final String? wareHouseUsername;
   final bool wareHouseHold;
   final bool handlePayment;
   final Status status;
@@ -34,15 +34,17 @@ class CashOrderEntity extends Equatable {
   });
 
   String get statusNameByShipper {
+    if (status == Status.INACTIVE && handlePayment) return 'Đã thanh toán online'; // online payment > auto complete
     if (shipperHold && !wareHouseHold && !handlePayment) {
-      return 'Bạn đang giữ tiền';
+      return 'Shipper đang giữ tiền';
     } else if (!shipperHold && !wareHouseHold && !handlePayment) {
-      return 'Chờ kho xác nhận';
+      return 'Chờ warehouse xác nhận';
     } else if (!shipperHold && wareHouseHold && !handlePayment) {
-      return 'Kho đang giữ tiền';
+      return 'Warehouse đang giữ tiền';
     } else if (!shipperHold && !wareHouseHold && handlePayment) {
       return 'Hoàn thành';
     }
+    // return 'Unknown status: $status, shipperHold: $shipperHold, wareHouseHold: $wareHouseHold, handlePayment: $handlePayment';
     return 'Unknown status';
   }
 

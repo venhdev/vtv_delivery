@@ -80,7 +80,7 @@ class CustomScrollTabView extends StatefulWidget {
       listController;
 
   final TypeWork typeWork;
-  final bool isSlidable;
+  final bool isSlidable; // whether the list (in day) can be slidable (for shipper transfer/ warehouse confirm action)
 
   final ValueSelected<DateTime>? onScanPressed;
   final ValueSelected<DateTime>? onInsertPressed;

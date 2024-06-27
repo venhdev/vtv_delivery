@@ -53,11 +53,21 @@ class DeliverProfilePage extends StatelessWidget {
 
                     BlocBuilder<AuthCubit, AuthState>(builder: (context, state) {
                       return ElevatedButton(
-                        onPressed: () {
-                          Provider.of<AppState>(context, listen: false).removeDeliveryInfo();
-                          final refreshToken = context.read<AuthCubit>().state.auth!.refreshToken;
-                          context.read<AuthCubit>().logout(refreshToken);
-                          if (context.mounted) Navigator.of(context).pop();
+                        onPressed: () async {
+                          final isConfirm = await showDialogToConfirm<bool>(
+                            context: context,
+                            title: 'Xác nhận đăng xuất',
+                            content: 'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?',
+                            confirmText: 'Đăng xuất',
+                            dismissText: 'Hủy bỏ',
+                          );
+
+                          if ((isConfirm ?? false) && context.mounted) {
+                            Provider.of<AppState>(context, listen: false).removeDeliveryInfo();
+                            final refreshToken = context.read<AuthCubit>().state.auth!.refreshToken;
+                            context.read<AuthCubit>().logout(refreshToken);
+                            Navigator.of(context).pop();
+                          }
                         },
                         child: state.status == AuthStatus.authenticating
                             ? const Text(

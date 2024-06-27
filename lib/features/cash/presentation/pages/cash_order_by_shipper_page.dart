@@ -4,7 +4,9 @@ import 'package:vtv_common/core.dart';
 import '../../../../dependency_container.dart';
 import '../../domain/entities/cash_order_by_date_entity.dart';
 import '../../domain/entities/request/transfer_money_request.dart';
+import '../../domain/entities/response/cash_order_response.dart';
 import '../../domain/repository/cash_repository.dart';
+import '../common/filter_cash_method.dart';
 import '../components/custom_scroll_tab_view.dart';
 
 class CashOrderByShipperPage extends StatefulWidget {
@@ -17,40 +19,43 @@ class CashOrderByShipperPage extends StatefulWidget {
 class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+      _shipperShippingListController;
+  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _shipperHoldingListController;
   late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _shipperTransferredListController;
 
   final _tabs = <Tab>[
+    const Tab(text: 'Đang giao'),
     const Tab(text: 'Đang giữ tiền'),
     const Tab(text: 'Đã nộp kho'),
   ];
-
-  List<CashOrderByDateEntity> filterMethod(currentItems, filteredItems, params) {
-    DateTime? filterDate = params.filterDate;
-    String? filterShipper = params.filterShipper;
-
-    List<CashOrderByDateEntity> rs = [...currentItems];
-
-    if (filterDate != null) {
-      filterDate = DateTime(filterDate.year, filterDate.month, filterDate.day);
-      rs.removeWhere((e) => e.date != filterDate);
-    }
-
-    if (filterShipper?.isNotEmpty == true) {
-      for (int i = 0; i < rs.length; i++) {
-        final filterCashOrders = rs[i].cashOrders.where((cash) => cash.shipperUsername == filterShipper).toList();
-        rs[i] = rs[i].copyWith(cashOrders: filterCashOrders);
-      }
-      rs.removeWhere((e) => e.cashOrders.isEmpty); // after filter, maybe some date has no cash order
-    }
-    return rs;
-  }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _shipperShippingListController = FilterListController(
+      items: <CashOrderByDateEntity>[],
+      filterParams: FilterCashTransferParams(),
+      futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperShipping),
+      parse: (unparsedData, onParseError) {
+        return unparsedData.fold(
+          (error) {
+            onParseError(errorMsg: error.message);
+            return null;
+          },
+          (ok) {
+            return ok.data!;
+          },
+        );
+      },
+    )
+      ..setDebugLabel('shipperShipping')
+      ..setFilterCallback(filterCashMethod)
+      ..setFirstRunCallback(() => _shipperHoldingListController.performFilter())
+      ..init();
+
     _shipperHoldingListController = FilterListController(
       items: <CashOrderByDateEntity>[],
       filterParams: FilterCashTransferParams(),
@@ -68,7 +73,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
       },
     )
       ..setDebugLabel('shipperHolding')
-      ..setFilterCallback(filterMethod)
+      ..setFilterCallback(filterCashMethod)
       ..setFirstRunCallback(() => _shipperHoldingListController.performFilter())
       ..init();
 
@@ -89,7 +94,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
       },
     )
       ..setDebugLabel('shipperTransferred')
-      ..setFilterCallback(filterMethod)
+      ..setFilterCallback(filterCashMethod)
       ..setFirstRunCallback(() => _shipperTransferredListController.performFilter())
       ..init();
   }
@@ -111,6 +116,11 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
+                //# shipper shipping
+                CustomScrollTabView.shipper(
+                  futureListController: _shipperShippingListController,
+                  isSlidable: false,
+                ),
                 //# shipper holding
                 CustomScrollTabView.shipper(
                   futureListController: _shipperHoldingListController,
@@ -139,40 +149,57 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
         .toList();
   }
 
+  int getTotalMoneyByDate(DateTime date) {
+    return _shipperHoldingListController.items
+        .where((element) => element.date == date)
+        .expand((element) => element.cashOrders)
+        .map((e) => e.money)
+        .fold(0, (previousValue, element) => previousValue + element);
+  }
+
+  Future<void> processTransfer(String warehouseUsername, DateTime date) async {
+    // show dialog to confirm transfer money to warehouse
+    // if confirmed, call api then refresh list
+    final isConfirm = await showDialogToConfirm<bool>(
+      context: context,
+      title: 'Gửi yêu cầu đối soát',
+      content:
+          '${ConversionUtils.formatCurrency(getTotalMoneyByDate(date))} Tiền mặt sẽ được gửi lại cho "$warehouseUsername". Bạn chắc chắn chứ?',
+      confirmText: 'Xác nhận',
+      dismissText: 'Thoát',
+    );
+
+    if ((isConfirm ?? false) && mounted) {
+      await showDialogToPerform<RespData<CashOrderResp>>(context,
+          dataCallback: () async {
+            return sl<CashRepository>().requestTransfersMoneyToWarehouseByShipper(
+                TransferMoneyRequest(cashOrderIds: getCashOrderIdsByDate(date), waveHouseUsername: warehouseUsername));
+          },
+          onData: (data) {
+            showToastResult(data as RespData, onSuccess: () {
+              _shipperHoldingListController.refreshAndFilter();
+              _shipperTransferredListController.refreshAndFilter();
+            });
+          },
+          closeBy: (context, result) => Navigator.of(context).pop(result));
+    }
+  }
+
   void handleInsertPressed(DateTime date) async {
     final warehouseUsername = await showDialogWithTextField(
       context: context,
       title: 'Mã kho',
       hintText: 'Nhập mã kho',
     ) as String?;
-    if (warehouseUsername == null || !mounted) return;
+    if (warehouseUsername == null || warehouseUsername == '' || !mounted) return;
 
-    await showDialogToPerform(context,
-        dataCallback: () async {
-          sl<CashRepository>()
-              .requestTransfersMoneyToWarehouseByShipper(
-                  TransferMoneyRequest(cashOrderIds: getCashOrderIdsByDate(date), waveHouseUsername: warehouseUsername))
-              .then((respEither) => showToastResult(respEither));
-        },
-        closeBy: (context, result) => Navigator.of(context).pop(result));
+    await processTransfer(warehouseUsername, date);
   }
 
   void handleScanPressed(DateTime date) async {
     final warehouseUsername = await Navigator.of(context).pushNamed('/scan') as String?;
     if (warehouseUsername == null || !mounted) return;
 
-    showDialogToConfirm(
-      context: context,
-      title: 'Gửi yêu cầu đối soát',
-      content: 'Yêu cầu đối soát sẽ được gửi cho kho $warehouseUsername. Bạn chắc chắn chứ?',
-      confirmText: 'Xác nhận',
-      dismissText: 'Thoát',
-      onConfirm: () async {
-        await sl<CashRepository>()
-            .requestTransfersMoneyToWarehouseByShipper(
-                TransferMoneyRequest(cashOrderIds: getCashOrderIdsByDate(date), waveHouseUsername: warehouseUsername))
-            .then((respEither) => showToastResult(respEither));
-      },
-    );
+    processTransfer(warehouseUsername, date);
   }
 }

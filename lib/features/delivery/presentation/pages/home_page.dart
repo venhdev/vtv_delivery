@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
@@ -124,7 +123,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
       builder: (context, state, child) {
         if (state.deliveryInfo == null) {
           fetchDeliveryInfo(context, state);
-          return const Center(child: CircularProgressIndicator());
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         } else {
           return child!;
         }

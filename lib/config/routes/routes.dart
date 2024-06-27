@@ -11,6 +11,7 @@ Map<String, Widget Function(BuildContext)> routes = <String, WidgetBuilder>{
   '/': (context) => const HomePage(),
   '/profile': (context) => const DeliverProfilePage(),
   '/scan': (context) => const QrScannerPage(),
+  '/qr': (context) => QrViewPage(data: ModalRoute.of(context)!.settings.arguments as String),
   '/pickup': (context) => const OrderPickUpPendingPage(),
   '/dev': (context) => DevPage(sl: sl),
 };

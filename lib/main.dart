@@ -23,7 +23,8 @@ void main() async {
   // sl<LocalNotificationHelper>().initializePluginAndHandler();
   sl<FirebaseCloudMessagingManager>().requestPermission();
 
-  final authCubit = sl<AuthCubit>()..onStarted();
+  final authCubit = sl<AuthCubit>();
+  await authCubit.onStarted();
 
   // NOTE: dev
   final savedHost = sl<SharedPreferencesHelper>().I.getString('host');
