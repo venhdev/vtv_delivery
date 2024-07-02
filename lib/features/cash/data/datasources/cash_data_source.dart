@@ -8,34 +8,13 @@ import '../../domain/entities/response/cash_order_response.dart';
 
 abstract class CashDataSource {
   //# cash-order-controller
-  // POST
-  // /api/shipping/cash-order/updates/transfers-money-warehouse
-  // const String kAPICashOrderTransfersMoneyWarehouseURL = '/shipping/cash-order/updates/transfers-money-warehouse';
   Future<SuccessResponse<CashOrderResp>> transfersMoneyWarehouseByShipper(TransferMoneyRequest req);
-  // POST
-  // /api/shipping/cash-order/updates/confirm-money-warehouse
-  // const String kAPICashOrderConfirmMoneyWarehouseURL = '/shipping/cash-order/updates/confirm-money-warehouse';
   Future<SuccessResponse<CashOrderResp>> confirmTransfersMoneyByWarehouse(TransferMoneyRequest req);
-
-  // GET
-  // /api/shipping/cash-order/list-by-wave-house
-  // const String kAPICashOrderListByWareHouseURL = '/shipping/cash-order/list-by-wave-house';
   Future<SuccessResponse<CashOrderResp>> listByWareHouse();
-
-  // GET
-  // /api/shipping/cash-order/history-by-warehouse
-  // const String kAPICashOrderHistoryByWarehouseURL = '/shipping/cash-order/history-by-warehouse';
   Future<SuccessResponse<List<CashOrderByDateEntity>>> historyByWareHouse(
       ({bool warehouseHold, bool handlePayment}) warehouseType);
-
-  // GET
-  // /api/shipping/cash-order/history-by-shipper
-  // const String kAPICashOrderHistoryByShipperURL = '/shipping/cash-order/history-by-shipper';
-  Future<SuccessResponse<List<CashOrderByDateEntity>>> historyByShipper(({bool shipperHold, bool shipping}) shipperType);
-
-  // GET
-  // /api/shipping/cash-order/all-by-shipper
-  // const String kAPICashOrderAllByShipperURL = '/shipping/cash-order/all-by-shipper';
+  Future<SuccessResponse<List<CashOrderByDateEntity>>> historyByShipper(
+      ({bool shipperHold, bool shipping}) shipperType);
   Future<SuccessResponse<CashOrderResp>> listByShipper();
 }
 
@@ -86,7 +65,8 @@ class CashDataSourceImpl implements CashDataSource {
     return handleDioResponse<List<CashOrderByDateEntity>, MapS>(
       response,
       url,
-      parse: (jsonMap) => (jsonMap['cashOrdersByDateDTOs'] as List).map((e) => CashOrderByDateEntity.fromMap(e)).toList(),
+      parse: (jsonMap) =>
+          (jsonMap['cashOrdersByDateDTOs'] as List).map((e) => CashOrderByDateEntity.fromMap(e)).toList(),
     );
   }
 
@@ -105,7 +85,8 @@ class CashDataSourceImpl implements CashDataSource {
     return handleDioResponse<List<CashOrderByDateEntity>, MapS>(
       response,
       url,
-      parse: (jsonMap) => (jsonMap['cashOrdersByDateDTOs'] as List).map((e) => CashOrderByDateEntity.fromMap(e)).toList(),
+      parse: (jsonMap) =>
+          (jsonMap['cashOrdersByDateDTOs'] as List).map((e) => CashOrderByDateEntity.fromMap(e)).toList(),
     );
   }
 

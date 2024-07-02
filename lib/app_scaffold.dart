@@ -4,15 +4,15 @@ import 'package:provider/provider.dart';
 import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
 
-import '../../../../app_state.dart';
-import '../../../../dependency_container.dart';
-import '../../../cash/presentation/pages/cash_order_by_shipper_page.dart';
-import '../../../cash/presentation/pages/cash_order_by_warehouse_page.dart';
-import '../../domain/repository/delivery_repository.dart';
-import '../components/home_page_content.dart';
+import 'app_state.dart';
+import 'dependency_container.dart';
+import 'features/cash/presentation/pages/cash_order_by_shipper_page.dart';
+import 'features/cash/presentation/pages/cash_order_by_warehouse_page.dart';
+import 'features/delivery/domain/repository/delivery_repository.dart';
+import 'features/delivery/presentation/components/first_tab_content.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class AppScaffold extends StatelessWidget {
+  const AppScaffold({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -77,28 +77,15 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
     });
   }
 
-  bool get isAppBarVisible {
+  bool get appBarVisible {
     return _selectedIndex == 0;
-  }
-
-  void fetchDeliveryInfo(BuildContext context, AppState? state) {
-    final AppState appState;
-    if (state == null) {
-      appState = Provider.of<AppState>(context, listen: false);
-    } else {
-      appState = state;
-    }
-    final authState = context.read<AuthCubit>().state;
-    if (authState.status == AuthStatus.authenticated && appState.deliveryInfo == null) {
-      appState.fetchDeliveryInfo();
-    }
   }
 
   @override
   void initState() {
     super.initState();
     _widgetOptions = <Widget>[
-      const HomePageContent(),
+      const FirstTabContent(),
       Consumer<AppState>(
         builder: (context, state, _) {
           switch (state.typeWork) {
@@ -115,6 +102,14 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
         },
       ),
     ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = Provider.of<AppState>(context, listen: false);
+      final authStatus = context.read<AuthCubit>().state.status;
+      if (authStatus == AuthStatus.authenticated && appState.deliveryInfo == null) {
+        appState.fetchDeliveryInfo();
+      }
+    });
   }
 
   @override
@@ -122,14 +117,13 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
     return Consumer<AppState>(
       builder: (context, state, child) {
         if (state.deliveryInfo == null) {
-          fetchDeliveryInfo(context, state);
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         } else {
           return child!;
         }
       },
       child: Scaffold(
-        appBar: isAppBarVisible
+        appBar: appBarVisible
             ? AppBar(
                 title: Text(widget.title),
                 centerTitle: true,

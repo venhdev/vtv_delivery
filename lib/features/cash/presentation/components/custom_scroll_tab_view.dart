@@ -34,6 +34,7 @@ class CustomScrollTabView extends StatefulWidget {
     required this.listController,
     required this.typeWork,
     required this.isSlidable,
+    required this.showAddress,
     this.onScanPressed,
     this.onInsertPressed,
     this.onConfirmPressed,
@@ -48,6 +49,7 @@ class CustomScrollTabView extends StatefulWidget {
     ValueSelected<DateTime>? onScanPressed,
     ValueSelected<DateTime>? onInsertPressed,
     VoidCallback? onRefresh,
+    bool showAddress = false,
   }) {
     assert((onScanPressed != null && onInsertPressed != null) || !isSlidable);
     return CustomScrollTabView._inner(
@@ -57,6 +59,7 @@ class CustomScrollTabView extends StatefulWidget {
       isSlidable: isSlidable,
       onScanPressed: onScanPressed,
       onInsertPressed: onInsertPressed,
+      showAddress: showAddress,
     );
   }
   factory CustomScrollTabView.warehouse({
@@ -67,6 +70,7 @@ class CustomScrollTabView extends StatefulWidget {
     bool isSlidable = false,
     void Function(List<String>, CashOrderByDateEntity)? onConfirmPressed,
     VoidCallback? onRefresh,
+    bool showAddress = false,
   }) {
     return CustomScrollTabView._inner(
       key: key,
@@ -74,6 +78,7 @@ class CustomScrollTabView extends StatefulWidget {
       typeWork: TypeWork.WAREHOUSE,
       isSlidable: isSlidable,
       onConfirmPressed: onConfirmPressed,
+      showAddress: showAddress,
     );
   }
   final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
@@ -81,6 +86,7 @@ class CustomScrollTabView extends StatefulWidget {
 
   final TypeWork typeWork;
   final bool isSlidable; // whether the list (in day) can be slidable (for shipper transfer/ warehouse confirm action)
+  final bool showAddress;
 
   final ValueSelected<DateTime>? onScanPressed;
   final ValueSelected<DateTime>? onInsertPressed;
@@ -286,6 +292,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
         (context, index) => CashItem(
           cash: cashOnDate.cashOrders[index],
           isWarehouse: widget.typeWork == TypeWork.WAREHOUSE,
+          showAddress: widget.showAddress,
         ),
       ),
     );

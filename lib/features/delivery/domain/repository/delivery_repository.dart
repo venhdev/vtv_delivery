@@ -10,6 +10,8 @@ abstract class DeliveryRepository {
 
   //# transport-controller
   /// use to get transport order by ward code
+  FRespData<TransportEntity> getTransportById(String transportId);
+  FRespData<String> getCustomerWardCodeByTransportId(String transportId); // custom
   FRespData<TransportResp> getTransportByWardCode(String wardCode);
   FRespData<TransportResp> getTransportByWardWork();
   FRespData<TransportEntity> updateStatusTransportByDeliver(

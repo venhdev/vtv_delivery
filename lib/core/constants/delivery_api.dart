@@ -5,7 +5,7 @@ const String kAPIDeliverInfoURL = '/shipping/deliver/info';
 const String kAPITransportGetWardURL = '/shipping/transport/get/ward'; // {wardCode}
 const String kAPITransportGetByWardWorkURL = '/shipping/transport/get-by-ward-work';
 const String kAPITransportUpdateStatusURL = '/shipping/transport/update-status'; // {transportId}
-
+const String kAPITransportGetURL = '/shipping/transport/get'; // {transportId}
 //# cash-order-controller
 // POST
 // /api/shipping/cash-order/updates/transfers-money-warehouse

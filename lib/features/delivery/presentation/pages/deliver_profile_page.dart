@@ -44,41 +44,43 @@ class DeliverProfilePage extends StatelessWidget {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    //# deliver info
-                    _DeliverInfo(deliver: deliver, userInfo: state.auth!.userInfo),
-                    const SizedBox(height: 8),
-
-                    BlocBuilder<AuthCubit, AuthState>(builder: (context, state) {
-                      return ElevatedButton(
-                        onPressed: () async {
-                          final isConfirm = await showDialogToConfirm<bool>(
-                            context: context,
-                            title: 'Xác nhận đăng xuất',
-                            content: 'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?',
-                            confirmText: 'Đăng xuất',
-                            dismissText: 'Hủy bỏ',
-                          );
-
-                          if ((isConfirm ?? false) && context.mounted) {
-                            Provider.of<AppState>(context, listen: false).removeDeliveryInfo();
-                            final refreshToken = context.read<AuthCubit>().state.auth!.refreshToken;
-                            context.read<AuthCubit>().logout(refreshToken);
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        child: state.status == AuthStatus.authenticating
-                            ? const Text(
-                                'Đang đăng xuất...',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black54),
-                              )
-                            : const Text('Đăng xuất'),
-                      );
-                    }),
-                  ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      //# deliver info
+                      _DeliverInfo(deliver: deliver, userInfo: state.auth!.userInfo),
+                      const SizedBox(height: 8),
+                  
+                      BlocBuilder<AuthCubit, AuthState>(builder: (context, state) {
+                        return ElevatedButton(
+                          onPressed: () async {
+                            final isConfirm = await showDialogToConfirm<bool>(
+                              context: context,
+                              title: 'Xác nhận đăng xuất',
+                              content: 'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?',
+                              confirmText: 'Đăng xuất',
+                              dismissText: 'Hủy bỏ',
+                            );
+                  
+                            if ((isConfirm ?? false) && context.mounted) {
+                              Provider.of<AppState>(context, listen: false).removeDeliveryInfo();
+                              final refreshToken = context.read<AuthCubit>().state.auth!.refreshToken;
+                              context.read<AuthCubit>().logout(refreshToken);
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          child: state.status == AuthStatus.authenticating
+                              ? const Text(
+                                  'Đang đăng xuất...',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.black54),
+                                )
+                              : const Text('Đăng xuất'),
+                        );
+                      }),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -125,7 +127,7 @@ class _DeliverInfo extends StatelessWidget {
             ],
           ),
         ),
-
+    
         const Divider(),
         //# deliver info
         Wrapper(

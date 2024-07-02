@@ -20,8 +20,17 @@ void main() {
 
       print("code controller is here");
     },
-
     timeout: const Timeout(Duration(seconds: 10)),
+  );
+  test(
+    'string map',
+    () {
+      final data = {
+        'warehouseUsername': 'warehouseUsername',
+        'warehouseWardCode': 'warehouseWardCode',
+      }.toString();
+      print(data);
+    },
   );
 }
 

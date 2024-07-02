@@ -25,7 +25,7 @@ class SummaryCashOnDate extends StatelessWidget {
             Expanded(
               child: FlexibleList(list: {
                 'Ngày': ConversionUtils.convertDateTimeToString(cashOnDate.date),
-                'Số đơn đã giao': cashOnDate.cashOrders.length.toString(),
+                'Tổng số đơn': cashOnDate.cashOrders.length.toString(),
                 'Tổng tiền thu': ConversionUtils.formatCurrency(cashOnDate.totalMoney),
               }),
             ),

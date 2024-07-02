@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart';
 import 'package:vtv_common/core.dart';
 import 'package:vtv_common/order.dart';
 
@@ -13,12 +14,12 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
 
   @override
   FRespData<DeliverEntity> getDeliverInfo() async {
-    return handleDataResponseFromDataSource(dataCallback: () => _dataSource.getDeliverInfo());
+    return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.getDeliverInfo());
   }
 
   @override
   FRespData<TransportResp> getTransportByWardCode(String wardCode) async {
-    return handleDataResponseFromDataSource(dataCallback: () => _dataSource.getTransportByWardCode(wardCode));
+    return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.getTransportByWardCode(wardCode));
   }
 
   @override
@@ -28,13 +29,28 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
     bool handled,
     String wardCode,
   ) async {
-    return handleDataResponseFromDataSource(
+    return await handleDataResponseFromDataSource(
       dataCallback: () => _dataSource.updateStatusTransportByDeliver(transportId, status, handled, wardCode),
     );
   }
 
   @override
   FRespData<TransportResp> getTransportByWardWork() async {
-    return handleDataResponseFromDataSource(dataCallback: () => _dataSource.getTransportByWardWork());
+    return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.getTransportByWardWork());
+  }
+
+  @override
+  FRespData<TransportEntity> getTransportById(String transportId) async {
+    return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.getTransportById(transportId));
+  }
+
+  @override
+  FRespData<String> getCustomerWardCodeByTransportId(String transportId) async {
+    final resp = await handleDataResponseFromDataSource(dataCallback: () => _dataSource.getTransportById(transportId));
+
+    return resp.fold(
+      (error) => Left(error),
+      (ok) => Right(SuccessResponse(data: ok.data!.wardCodeCustomer)),
+    );
   }
 }

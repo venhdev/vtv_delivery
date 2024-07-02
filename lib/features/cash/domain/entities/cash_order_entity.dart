@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
@@ -38,7 +37,22 @@ class CashOrderEntity extends Equatable {
     if (shipperHold && !wareHouseHold && !handlePayment) {
       return 'Shipper đang giữ tiền';
     } else if (!shipperHold && !wareHouseHold && !handlePayment) {
-      return 'Chờ warehouse xác nhận';
+      return 'Đã gửi tiền cho kho'; //! only shipper can see this status at 3rd tab (has been sent money to warehouse)
+    } else if (!shipperHold && wareHouseHold && !handlePayment) {
+      return 'Warehouse đang giữ tiền';
+    } else if (!shipperHold && !wareHouseHold && handlePayment) {
+      return 'Hoàn thành';
+    }
+    return 'Unknown status: $status, shipperHold: $shipperHold, wareHouseHold: $wareHouseHold, handlePayment: $handlePayment';
+    // return 'Unknown status';
+  }
+
+  String get statusNameByWarehouse {
+    if (status == Status.INACTIVE && handlePayment) return 'Đã thanh toán online'; // online payment > auto complete
+    if (shipperHold && !wareHouseHold && !handlePayment) {
+      return 'Shipper đang giữ tiền';
+    } else if (!shipperHold && !wareHouseHold && !handlePayment) {
+      return 'Chờ kho xác nhận'; //! only warehouse can see this status at 1st tab (under warehouse's confirmation)
     } else if (!shipperHold && wareHouseHold && !handlePayment) {
       return 'Warehouse đang giữ tiền';
     } else if (!shipperHold && !wareHouseHold && handlePayment) {

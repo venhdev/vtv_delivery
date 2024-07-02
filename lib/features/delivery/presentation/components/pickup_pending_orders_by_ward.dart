@@ -9,10 +9,19 @@ import '../../domain/entities/shop_and_transport_entity.dart';
 import '../../domain/entities/ward_work_entity.dart';
 import '../../domain/repository/delivery_repository.dart';
 
-class NearbyOrders extends StatelessWidget {
-  const NearbyOrders({super.key, this.wardWork});
+class PickupPendingOrdersByWard extends StatelessWidget {
+  const PickupPendingOrdersByWard({super.key, this.wardWork});
 
-  final WardWorkEntity? wardWork;
+  final WardWorkEntity? wardWork; // if null, get by current ward work
+
+  bool isEmpty(List<ShopAndTransportEntity> shopAndTransports) {
+    for (final shopAndTransport in shopAndTransports) {
+      if (shopAndTransport.count > 0) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,19 +33,20 @@ class NearbyOrders extends StatelessWidget {
         if (snapshot.hasData) {
           return snapshot.data!.fold(
             (error) => MessageScreen.error(error.message),
-            (ok) => Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Text(
-                    'Các đơn hàng cần giao tại ${wardWork != null ? wardWork!.fullName : 'khu vực của bạn'}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  for (final shopAndTransport in ok.data!.shopAndTransports)
-                    if (shopAndTransport.count > 0) ShopAndTransport(shopAndTransport: shopAndTransport),
-                ],
-              ),
-            ),
+            (ok) {
+              if (ok.data!.shopAndTransports.isEmpty || isEmpty(ok.data!.shopAndTransports)) {
+                return const Center(child: MessageScreen(message: 'Không có đơn hàng nào cần giao tại khu vực này!'));
+              }
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    for (final shopAndTransport in ok.data!.shopAndTransports)
+                      if (shopAndTransport.count > 0) ShopAndTransport(shopAndTransport: shopAndTransport),
+                  ],
+                ),
+              );
+            },
           );
         }
         return const SizedBox.shrink();
@@ -64,9 +74,22 @@ class ShopAndTransport extends StatelessWidget {
             color: Theme.of(context).colorScheme.tertiaryContainer,
             borderRadius: BorderRadius.circular(4),
           ),
-          bottom: Text(
-            'Địa chỉ Shop: ${shopAndTransport.shop.address}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          bottom: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Địa chỉ Shop: ${shopAndTransport.shop.address}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              // open map
+              IconButton(
+                icon: const Icon(Icons.directions),
+                onPressed: () {
+                  MapUtils.openMapWithQuery(shopAndTransport.shop.address);
+                },
+              ),
+            ],
           ),
         ),
         for (final transport in shopAndTransport.transports) TransportItem(transport: transport),
@@ -91,7 +114,7 @@ class TransportItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: FutureBuilder(
-          future: sl<GuestRepository>().getFullAddressByWardCode(transport.wardCodeCustomer),
+          future: sl<GuestRepository>().getAddressByWardCode(transport.wardCodeCustomer),
           builder: (context, snapshot) {
             if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
               return snapshot.data!.fold(
@@ -100,7 +123,7 @@ class TransportItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     buildStatus(transport.transportHandles.first.transportStatus),
-                    Text('Mã đơn hàng: ${transport.orderId}'),
+                    Text('Mã đơn hàng: ${transport.orderId}', softWrap: false, overflow: TextOverflow.ellipsis),
                     // FullAddressByWardCode(
                     //   prefixString: 'Địa chỉ giao hàng: ',
                     //   wardCode: transport.wardCodeCustomer,
@@ -148,7 +171,7 @@ class FullAddressByWardCode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: sl<GuestRepository>().getFullAddressByWardCode(wardCode),
+      future: sl<GuestRepository>().getAddressByWardCode(wardCode),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return snapshot.data!.fold(

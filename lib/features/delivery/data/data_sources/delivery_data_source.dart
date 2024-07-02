@@ -11,6 +11,7 @@ abstract class DeliveryDataSource {
   Future<SuccessResponse<DeliverEntity>> getDeliverInfo();
 
   //# transport-controller
+  Future<SuccessResponse<TransportEntity>> getTransportById(String transportId);
   Future<SuccessResponse<TransportResp>> getTransportByWardCode(String wardCode);
   Future<SuccessResponse<TransportResp>> getTransportByWardWork();
   Future<SuccessResponse<TransportEntity>> updateStatusTransportByDeliver(
@@ -80,6 +81,19 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
       response,
       url,
       parse: (jsonMap) => TransportResp.fromMap(jsonMap),
+    );
+  }
+  
+  @override
+  Future<SuccessResponse<TransportEntity>> getTransportById(String transportId) async {
+    final url = uriBuilder(path: '$kAPITransportGetURL/$transportId');
+
+    final response = await _dio.getUri(url);
+
+    return handleDioResponse<TransportEntity, Map<String, dynamic>>(
+      response,
+      url,
+      parse: (jsonMap) => TransportEntity.fromMap(jsonMap['transportDTO']),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:vtv_common/core.dart';
 
@@ -53,7 +55,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
     )
       ..setDebugLabel('shipperShipping')
       ..setFilterCallback(filterCashMethod)
-      ..setFirstRunCallback(() => _shipperHoldingListController.performFilter())
+      ..setFirstRunCallback(() => _shipperShippingListController.performFilter())
       ..init();
 
     _shipperHoldingListController = FilterListController(
@@ -119,7 +121,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
                 //# shipper shipping
                 CustomScrollTabView.shipper(
                   futureListController: _shipperShippingListController,
-                  isSlidable: false,
+                  showAddress: true,
                 ),
                 //# shipper holding
                 CustomScrollTabView.shipper(
@@ -164,7 +166,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
       context: context,
       title: 'Gửi yêu cầu đối soát',
       content:
-          '${ConversionUtils.formatCurrency(getTotalMoneyByDate(date))} Tiền mặt sẽ được gửi lại cho "$warehouseUsername". Bạn chắc chắn chứ?',
+          'Gửi lại số tiền ${ConversionUtils.formatCurrency(getTotalMoneyByDate(date))} cho "$warehouseUsername". Bạn chắc chắn chứ?',
       confirmText: 'Xác nhận',
       dismissText: 'Thoát',
     );
@@ -197,9 +199,16 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
   }
 
   void handleScanPressed(DateTime date) async {
-    final warehouseUsername = await Navigator.of(context).pushNamed('/scan') as String?;
-    if (warehouseUsername == null || !mounted) return;
+    // {wU: '<warehouse's username>', wC: '12345'}
+    final data = await Navigator.of(context).pushNamed('/scan') as String?;
+    if (data == null || !mounted) return;
+    // log('data: $data');
+    final parsed = jsonDecode(data) as Map<String, dynamic>;
+    // log('parsed: $parsed');
 
-    processTransfer(warehouseUsername, date);
+    // Logger().e('Scanned data: ${parsed['wU']}');
+    // Logger().e('Scanned data: ${parsed['wC']}');
+
+    processTransfer(parsed['wU'], date);
   }
 }
