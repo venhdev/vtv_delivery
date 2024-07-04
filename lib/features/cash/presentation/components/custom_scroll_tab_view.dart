@@ -35,6 +35,7 @@ class CustomScrollTabView extends StatefulWidget {
     required this.typeWork,
     required this.isSlidable,
     required this.showAddress,
+    this.canChangeShipper = true,
     this.onScanPressed,
     this.onInsertPressed,
     this.onConfirmPressed,
@@ -50,6 +51,7 @@ class CustomScrollTabView extends StatefulWidget {
     ValueSelected<DateTime>? onInsertPressed,
     VoidCallback? onRefresh,
     bool showAddress = false,
+    bool canChangeShipper = false,
   }) {
     assert((onScanPressed != null && onInsertPressed != null) || !isSlidable);
     return CustomScrollTabView._inner(
@@ -60,6 +62,7 @@ class CustomScrollTabView extends StatefulWidget {
       onScanPressed: onScanPressed,
       onInsertPressed: onInsertPressed,
       showAddress: showAddress,
+      canChangeShipper: canChangeShipper,
     );
   }
   factory CustomScrollTabView.warehouse({
@@ -71,6 +74,7 @@ class CustomScrollTabView extends StatefulWidget {
     void Function(List<String>, CashOrderByDateEntity)? onConfirmPressed,
     VoidCallback? onRefresh,
     bool showAddress = false,
+    bool canChangeShipper = true,
   }) {
     return CustomScrollTabView._inner(
       key: key,
@@ -79,6 +83,7 @@ class CustomScrollTabView extends StatefulWidget {
       isSlidable: isSlidable,
       onConfirmPressed: onConfirmPressed,
       showAddress: showAddress,
+      canChangeShipper: canChangeShipper,
     );
   }
   final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
@@ -87,6 +92,7 @@ class CustomScrollTabView extends StatefulWidget {
   final TypeWork typeWork;
   final bool isSlidable; // whether the list (in day) can be slidable (for shipper transfer/ warehouse confirm action)
   final bool showAddress;
+  final bool canChangeShipper;
 
   final ValueSelected<DateTime>? onScanPressed;
   final ValueSelected<DateTime>? onInsertPressed;
@@ -208,8 +214,8 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
         padding: const EdgeInsets.all(8.0),
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: _totalCashTransferCountAndEditClearFilter()),
-            SliverToBoxAdapter(child: _filterInput()),
+            SliverToBoxAdapter(child: _totalCashTransferCountAndEditClearFilter(canChangeShipper: widget.canChangeShipper)),
+            SliverToBoxAdapter(child: _filterInput(canChangeShipper: widget.canChangeShipper)),
             if (widget.listController.filteredItems?.isEmpty == true) SliverFillRemaining(child: emptyFilterView()),
             for (final cashOnDate in widget.listController.filteredItems!) ...[
               SliverToBoxAdapter(
@@ -298,7 +304,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     );
   }
 
-  Widget _totalCashTransferCountAndEditClearFilter({bool canChangeShipper = true}) {
+  Widget _totalCashTransferCountAndEditClearFilter({required bool canChangeShipper}) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: IntrinsicHeight(
@@ -360,7 +366,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     );
   }
 
-  Widget _filterInput({bool canChangeShipper = true}) {
+  Widget _filterInput({required bool canChangeShipper}) {
     return Column(
       children: [
         Row(

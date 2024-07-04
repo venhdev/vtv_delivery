@@ -76,6 +76,9 @@ class DeliveryScannerPage extends StatelessWidget {
         } else if (transport.status == OrderStatus.SHIPPING && currentWorkType == TypeWork.SHIPPER) {
           //# (7) shipper deliver to customer
           return 'Giao hàng thành công';
+        } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.WAREHOUSE) {
+          //# (8) warehouse give order to customer WAREHOUSE >> DELIVERED
+          return 'Giao tại kho thành công';
         }
     }
     return null;
@@ -137,19 +140,14 @@ class DeliveryScannerPage extends StatelessWidget {
       case DeliveryType.deliver:
         if (transport.status == OrderStatus.PICKED_UP && currentWorkType == TypeWork.PICKUP) {
           return () async {
-            final resp = await showDialogToPerform(
-              context,
-              dataCallback: () => sl<DeliveryRepository>().updateStatusTransportByDeliver(
+            execute(context, controller, () {
+              return sl<DeliveryRepository>().updateStatusTransportByDeliver(
                 transport.transportId,
                 OrderStatus.WAREHOUSE,
                 true,
-                transport.wardCodeShop,
-              ),
-              closeBy: (context, result) => Navigator.of(context).pop(result),
-            );
-            if (resp == null) return;
-            showToastResult(resp);
-            controller.start(); // hide the overlay & start scanning again
+                transport.wardCodeCustomer,
+              );
+            });
           };
         } else if (transport.status == OrderStatus.SHIPPING && currentWorkType == TypeWork.SHIPPER) {
           //# (7) shipper deliver to customer
@@ -160,6 +158,19 @@ class DeliveryScannerPage extends StatelessWidget {
                 OrderStatus.DELIVERED,
                 true,
                 transport.wardCodeCustomer,
+              );
+            });
+          };
+        } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.WAREHOUSE) {
+          //# (8) warehouse give order to customer WAREHOUSE >> DELIVERED
+          final warehouseWardCode = transport.transportHandles.first.wardCode;
+          return () async {
+            execute(context, controller, () {
+              return sl<DeliveryRepository>().updateStatusTransportByDeliver(
+                transport.transportId,
+                OrderStatus.DELIVERED,
+                true,
+                warehouseWardCode,
               );
             });
           };

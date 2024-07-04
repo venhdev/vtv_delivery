@@ -92,19 +92,19 @@ class FirstTabContent extends StatelessWidget {
             await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
           },
         ),
-        const SizedBox(width: 8),
+        // const SizedBox(width: 8),
 
-        //# open scanner to get warehouse's qr >> delivered to warehouse
-        MenuActionItem(
-          label: 'Lưu kho',
-          icon: Icons.mode_of_travel_outlined,
-          color: Colors.green,
-          labelTextStyle: _menuLabelTextStyle,
-          onPressed: () async {
-            final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
-            Navigator.of(context).pushNamed('/qr', arguments: warehouseUsername);
-          },
-        ),
+        // //# open scanner to get warehouse's qr >> delivered to warehouse
+        // MenuActionItem(
+        //   label: 'Lưu kho',
+        //   icon: Icons.mode_of_travel_outlined,
+        //   color: Colors.green,
+        //   labelTextStyle: _menuLabelTextStyle,
+        //   onPressed: () async {
+        //     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
+        //     Navigator.of(context).pushNamed('/qr', arguments: warehouseUsername);
+        //   },
+        // ),
       ],
     );
   }
@@ -152,7 +152,7 @@ class FirstTabContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         MenuActionItem(
-          label: typeWork == TypeWork.WAREHOUSE ? 'Lưu kho' : 'Chuẩn bị giao',
+          label: typeWork == TypeWork.WAREHOUSE ? 'Lưu kho / Lấy hàng' : 'Chuẩn bị giao',
           icon: Icons.qr_code_scanner,
           color: Colors.blue,
           labelTextStyle: _menuLabelTextStyle,

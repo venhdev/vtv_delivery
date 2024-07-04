@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:dartz/dartz.dart' as dartz;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vtv_common/auth.dart';
@@ -22,6 +24,9 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
   late TabController _tabController;
   late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _warehouseUnderConfirmationListController;
+  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+      _warehouseDeliveredListController;
+
   late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       _warehouseHoldingListController;
   late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
@@ -82,6 +87,26 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
       ..setFirstRunCallback(() => _warehouseUnderConfirmationListController.performFilter())
       ..init();
 
+    //? this case, warehouse is shipper
+    _warehouseDeliveredListController = FilterListController(
+        items: <CashOrderByDateEntity>[],
+        filterParams: FilterCashTransferParams(),
+        futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperHolding),
+        parse: (unparsedData, onParseError) {
+          return unparsedData.fold(
+            (error) {
+              onParseError(errorMsg: error.message);
+              return null;
+            },
+            (ok) {
+              return ok.data!;
+            },
+          );
+        })
+      ..setFilterCallback(filterCashMethod)
+      ..setFirstRunCallback(() => _warehouseDeliveredListController.performFilter())
+      ..init();
+
     _warehouseHoldingListController = FilterListController(
         items: <CashOrderByDateEntity>[],
         filterParams: FilterCashTransferParams(),
@@ -139,11 +164,11 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 //# under confirmation
-                CustomScrollTabView.warehouse(
-                  futureListController: _warehouseUnderConfirmationListController,
-                  isSlidable: true,
-                  onConfirmPressed: handleConfirmPressed,
-                  onRefresh: () => _warehouseUnderConfirmationListController.refresh(),
+                DeliveredByShipperAndWarehouse(
+                  shipperDeliveredListController: _warehouseUnderConfirmationListController,
+                  warehouseDeliveredListController: _warehouseDeliveredListController,
+                  onWarehouseConfirmShipperRequestPressed: handleWarehouseConfirmRequestPressed,
+                  onWarehouseConfirmDeliveredAtStoragePressed: handleWarehouseConfirmDeliveredAtStoragePressed,
                 ),
                 //# warehouse holding
                 CustomScrollTabView.warehouse(
@@ -165,7 +190,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
     );
   }
 
-  void handleConfirmPressed(List<String> cashOrderIds, CashOrderByDateEntity cashOnDate) async {
+  void handleWarehouseConfirmRequestPressed(List<String> cashOrderIds, CashOrderByDateEntity cashOnDate) async {
     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
     if (warehouseUsername == null) return;
 
@@ -197,5 +222,117 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
           },
           closeBy: (context, result) => Navigator.of(context).pop(result));
     }
+  }
+
+  //? at this case, warehouse is shipper
+  void handleWarehouseConfirmDeliveredAtStoragePressed(
+      List<String> cashOrderIds, CashOrderByDateEntity cashOnDate) async {
+    final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
+    if (warehouseUsername == null) return;
+
+    final isConfirm = await showDialogToConfirm(
+      context: context,
+      title: 'Xác nhận đối soát',
+      content:
+          'Bạn đã nhận đủ ${ConversionUtils.formatCurrency(cashOnDate.totalMoney)} từ khách hàng chưa? Tiền sẽ được tự động chuyển cho người bán khi đơn hàng được hoàn thành.\n\nLưu ý: Toàn bộ (${cashOnDate.count} đơn hàng) trong danh sách sẽ được xác nhận.',
+      contentTextAlign: TextAlign.start,
+      confirmText: 'Xác nhận',
+      dismissText: 'Thoát',
+    );
+
+    if ((isConfirm ?? false) && mounted) {
+      await showDialogToPerform<RespData<CashOrderResp>>(context,
+          dataCallback: () async {
+            final respEither = await sl<CashRepository>().requestTransfersMoneyToWarehouseByShipper(
+                TransferMoneyRequest(cashOrderIds: cashOrderIds, waveHouseUsername: warehouseUsername));
+
+            return respEither.fold(
+              (error) {
+                return dartz.Left(error);
+              },
+              (ok) async {
+                return await sl<CashRepository>().confirmTransfersMoneyByWarehouse(
+                    TransferMoneyRequest(cashOrderIds: cashOrderIds, waveHouseUsername: warehouseUsername));
+              },
+            );
+          },
+          onData: (data) {
+            showToastResult(data as RespData, onSuccess: () {
+              _warehouseDeliveredListController.refreshAndFilter();
+              _warehouseHoldingListController.refreshAndFilter();
+              _warehouseTransferredListController.refreshAndFilter();
+            });
+          },
+          closeBy: (context, result) => Navigator.of(context).pop(result));
+    }
+  }
+}
+
+class DeliveredByShipperAndWarehouse extends StatefulWidget {
+  const DeliveredByShipperAndWarehouse({
+    super.key,
+    required this.shipperDeliveredListController,
+    required this.warehouseDeliveredListController,
+    required this.onWarehouseConfirmShipperRequestPressed,
+    required this.onWarehouseConfirmDeliveredAtStoragePressed,
+  });
+
+  // _warehouseUnderConfirmationListController
+  final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+      shipperDeliveredListController;
+
+  final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+      warehouseDeliveredListController;
+
+  final void Function(List<String>, CashOrderByDateEntity) onWarehouseConfirmShipperRequestPressed;
+  final void Function(List<String>, CashOrderByDateEntity) onWarehouseConfirmDeliveredAtStoragePressed;
+
+  @override
+  State<DeliveredByShipperAndWarehouse> createState() => _DeliveredByShipperAndWarehouseState();
+}
+
+class _DeliveredByShipperAndWarehouseState extends State<DeliveredByShipperAndWarehouse>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Giao bởi shipper'),
+            Tab(text: 'Giao bởi kho'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              CustomScrollTabView.warehouse(
+                futureListController: widget.shipperDeliveredListController,
+                isSlidable: true,
+                onConfirmPressed: widget.onWarehouseConfirmShipperRequestPressed,
+                onRefresh: () => widget.shipperDeliveredListController.refresh(),
+              ),
+              CustomScrollTabView.warehouse(
+                futureListController: widget.warehouseDeliveredListController,
+                isSlidable: true,
+                onConfirmPressed: widget.onWarehouseConfirmDeliveredAtStoragePressed,
+                onRefresh: () => widget.shipperDeliveredListController.refresh(),
+                canChangeShipper: false,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
