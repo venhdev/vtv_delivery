@@ -9,7 +9,8 @@ import 'dependency_container.dart';
 import 'features/cash/presentation/pages/cash_order_by_shipper_page.dart';
 import 'features/cash/presentation/pages/cash_order_by_warehouse_page.dart';
 import 'features/delivery/domain/repository/delivery_repository.dart';
-import 'features/delivery/presentation/components/first_tab_content.dart';
+import 'features/delivery/presentation/pages/deliver_profile_page.dart';
+import 'features/delivery/presentation/pages/delivery_home_page.dart';
 
 class AppScaffold extends StatelessWidget {
   const AppScaffold({super.key});
@@ -35,7 +36,7 @@ class AppScaffold extends StatelessWidget {
             );
           }
           // HomePage base on role
-          return _HomePageWithBottomNavigation('Xin chào, ${state.auth!.userInfo.username!}');
+          return _AppScaffoldWithBottomNavigation('Xin chào, ${state.auth!.userInfo.username!}');
         } else {
           return _noAuth(context);
         }
@@ -57,16 +58,16 @@ class AppScaffold extends StatelessWidget {
   }
 }
 
-class _HomePageWithBottomNavigation extends StatefulWidget {
-  const _HomePageWithBottomNavigation(this.title);
+class _AppScaffoldWithBottomNavigation extends StatefulWidget {
+  const _AppScaffoldWithBottomNavigation(this.title);
 
   final String title;
 
   @override
-  State<_HomePageWithBottomNavigation> createState() => _HomePageWithBottomNavigationState();
+  State<_AppScaffoldWithBottomNavigation> createState() => _AppScaffoldWithBottomNavigationState();
 }
 
-class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNavigation> {
+class _AppScaffoldWithBottomNavigationState extends State<_AppScaffoldWithBottomNavigation> {
   int _selectedIndex = 0;
   late List<Widget> _widgetOptions;
 
@@ -85,7 +86,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
   void initState() {
     super.initState();
     _widgetOptions = <Widget>[
-      const FirstTabContent(),
+      const DeliveryHomePage(),
       Consumer<AppState>(
         builder: (context, state, _) {
           switch (state.typeWork) {
@@ -126,7 +127,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
         appBar: appBarVisible
             ? AppBar(
                 title: Text(widget.title),
-                centerTitle: true,
+                // centerTitle: true,
                 actions: _actions(context),
               )
             : null,
@@ -145,7 +146,7 @@ class _HomePageWithBottomNavigationState extends State<_HomePageWithBottomNaviga
           deliver.fold(
             (error) => null,
             (ok) => Navigator.of(context).pushNamed(
-              '/profile',
+              DeliverProfilePage.routeName,
               arguments: ok.data!,
             ),
           );

@@ -6,16 +6,16 @@ import '../../domain/entities/deliver_entity.dart';
 import '../../domain/entities/ward_work_entity.dart';
 import '../components/pickup_pending_orders_by_ward.dart';
 
-class PickUpPendingOrderPage extends StatefulWidget {
-  const PickUpPendingOrderPage({
+class PickUpPendingOrdersPage extends StatefulWidget {
+  const PickUpPendingOrdersPage({
     super.key,
   });
 
   @override
-  State<PickUpPendingOrderPage> createState() => _PickUpPendingOrderPageState();
+  State<PickUpPendingOrdersPage> createState() => _PickUpPendingOrdersPageState();
 }
 
-class _PickUpPendingOrderPageState extends State<PickUpPendingOrderPage> {
+class _PickUpPendingOrdersPageState extends State<PickUpPendingOrdersPage> {
   WardWorkEntity? selectedWard;
 
   @override
@@ -73,6 +73,7 @@ class _PickUpPendingOrderPageState extends State<PickUpPendingOrderPage> {
 
         //# list of orders at selected ward
         if (selectedWard != null) SliverFillRemaining(child: PickupPendingOrdersByWard(wardWork: selectedWard!))
+        //? change log: old ver. without selected ward feature so it shows all wards
         // SliverList(
         //   delegate: SliverChildBuilderDelegate(
         //     (context, index) => PickupPendingOrdersByWard(wardWork: deliver.wardWorks[index]),

@@ -20,7 +20,7 @@ class DeliverProfilePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hồ sơ người vận chuyển'),
+        title: const Text('Thông tin tài khoản'),
         actions: [
           //# dev page
           IconButton(

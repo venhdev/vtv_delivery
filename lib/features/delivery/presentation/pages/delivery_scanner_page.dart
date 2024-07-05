@@ -67,7 +67,7 @@ class DeliveryScannerPage extends StatelessWidget {
           return 'Lưu kho';
         } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.SHIPPER) {
           //# (5) shipper get order from warehouse
-          return 'Sẵn sàng giao';
+          return 'Lấy hàng từ kho';
         }
 
       case DeliveryType.deliver:

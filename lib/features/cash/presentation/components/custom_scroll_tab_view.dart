@@ -39,6 +39,8 @@ class CustomScrollTabView extends StatefulWidget {
     this.onScanPressed,
     this.onInsertPressed,
     this.onConfirmPressed,
+    this.onStorePressed,
+    required this.warehouseSlideEndLabel,
   });
 
   factory CustomScrollTabView.shipper({
@@ -47,13 +49,13 @@ class CustomScrollTabView extends StatefulWidget {
             FilterCashTransferParams>
         futureListController,
     bool isSlidable = false,
-    ValueSelected<DateTime>? onScanPressed,
-    ValueSelected<DateTime>? onInsertPressed,
+    void Function(BuildContext, DateTime)? onScanPressed,
+    void Function(BuildContext, DateTime)? onInsertPressed,
+    void Function(BuildContext, DateTime)? onStorePressed,
     VoidCallback? onRefresh,
     bool showAddress = false,
     bool canChangeShipper = false,
   }) {
-    assert((onScanPressed != null && onInsertPressed != null) || !isSlidable);
     return CustomScrollTabView._inner(
       key: key,
       listController: futureListController,
@@ -61,10 +63,13 @@ class CustomScrollTabView extends StatefulWidget {
       isSlidable: isSlidable,
       onScanPressed: onScanPressed,
       onInsertPressed: onInsertPressed,
+      onStorePressed: onStorePressed,
       showAddress: showAddress,
       canChangeShipper: canChangeShipper,
+      warehouseSlideEndLabel: 'Xác nhận',
     );
   }
+
   factory CustomScrollTabView.warehouse({
     Key? key,
     required FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>,
@@ -75,6 +80,7 @@ class CustomScrollTabView extends StatefulWidget {
     VoidCallback? onRefresh,
     bool showAddress = false,
     bool canChangeShipper = true,
+    String warehouseSlideEndLabel = 'Xác nhận',
   }) {
     return CustomScrollTabView._inner(
       key: key,
@@ -84,8 +90,10 @@ class CustomScrollTabView extends StatefulWidget {
       onConfirmPressed: onConfirmPressed,
       showAddress: showAddress,
       canChangeShipper: canChangeShipper,
+      warehouseSlideEndLabel: warehouseSlideEndLabel,
     );
   }
+
   final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
       listController;
 
@@ -94,9 +102,16 @@ class CustomScrollTabView extends StatefulWidget {
   final bool showAddress;
   final bool canChangeShipper;
 
-  final ValueSelected<DateTime>? onScanPressed;
-  final ValueSelected<DateTime>? onInsertPressed;
+  //# shipper action
+  final void Function(BuildContext, DateTime)? onScanPressed;
+  final void Function(BuildContext, DateTime)? onInsertPressed;
+  final void Function(BuildContext, DateTime)? onStorePressed;
+
+  //# warehouse action
   final void Function(List<String>, CashOrderByDateEntity)? onConfirmPressed;
+
+  // style
+  final String warehouseSlideEndLabel;
 
   @override
   State<CustomScrollTabView> createState() => _CustomScrollTabViewState();
@@ -185,7 +200,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
               SliverToBoxAdapter(
                 child: Slidable(
                   key: ValueKey(cashOnDate.date),
-                  endActionPane: widget.isSlidable ? _shipperSlideEnd(cashOnDate.date) : null,
+                  endActionPane: widget.isSlidable ? shipperActionPane(cashOnDate.date) : null,
                   child: SummaryCashOnDate(
                     cashOnDate: cashOnDate,
                     endBuilder: widget.isSlidable
@@ -214,7 +229,8 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
         padding: const EdgeInsets.all(8.0),
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: _totalCashTransferCountAndEditClearFilter(canChangeShipper: widget.canChangeShipper)),
+            SliverToBoxAdapter(
+                child: _totalCashTransferCountAndEditClearFilter(canChangeShipper: widget.canChangeShipper)),
             SliverToBoxAdapter(child: _filterInput(canChangeShipper: widget.canChangeShipper)),
             if (widget.listController.filteredItems?.isEmpty == true) SliverFillRemaining(child: emptyFilterView()),
             for (final cashOnDate in widget.listController.filteredItems!) ...[
@@ -240,7 +256,36 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     );
   }
 
-  ActionPane _shipperSlideEnd(DateTime date) {
+  ActionPane? shipperActionPane(DateTime date) {
+    if (widget.onStorePressed != null) {
+      return _shipperSlideEndToStoreOrder(date);
+    } else if (widget.onScanPressed != null && widget.onInsertPressed != null) {
+      return _shipperSlideEndToTransferCash(date);
+    }
+    return null;
+  }
+
+  ActionPane _shipperSlideEndToStoreOrder(DateTime date) {
+    return ActionPane(
+      motion: const ScrollMotion(),
+      extentRatio: 0.3,
+
+      // All actions are defined in the children parameter.
+      children: [
+        const SizedBox(width: 2),
+        SlidableAction(
+          borderRadius: BorderRadius.circular(8),
+          backgroundColor: Colors.cyan,
+          foregroundColor: Colors.white,
+          icon: Icons.qr_code_scanner_sharp,
+          label: 'Lưu kho',
+          onPressed: (context) => widget.onStorePressed!(context, date),
+        ),
+      ],
+    );
+  }
+
+  ActionPane _shipperSlideEndToTransferCash(DateTime date) {
     return ActionPane(
       // A motion is a widget used to control how the pane animates.
       motion: const ScrollMotion(),
@@ -255,7 +300,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           foregroundColor: Colors.white,
           icon: Icons.qr_code_scanner_sharp,
           label: 'Quét',
-          onPressed: widget.onScanPressed != null ? (_) => widget.onScanPressed!(date) : null,
+          onPressed: (context) => widget.onScanPressed!(context, date),
         ),
         const SizedBox(width: 2),
         SlidableAction(
@@ -264,7 +309,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           foregroundColor: Colors.white,
           icon: Icons.type_specimen_outlined,
           label: 'Nhập',
-          onPressed: widget.onInsertPressed != null ? (_) => widget.onInsertPressed!(date) : null,
+          onPressed: (context) => widget.onInsertPressed!(context, date),
         ),
       ],
     );
@@ -281,7 +326,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
           icon: Icons.check,
-          label: 'Xác nhận',
+          label: widget.warehouseSlideEndLabel,
           onPressed: widget.onConfirmPressed != null
               ? (_) => widget.onConfirmPressed!(
                   getCashOrderIdsByDate(cashOnDate.date, widget.listController.filteredItems!), cashOnDate)

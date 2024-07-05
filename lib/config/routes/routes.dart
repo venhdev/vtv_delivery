@@ -5,12 +5,12 @@ import 'package:vtv_common/dev.dart';
 import '../../app_scaffold.dart';
 import '../../features/delivery/presentation/pages/deliver_profile_page.dart';
 import '../../features/delivery/presentation/pages/delivery_scanner_page.dart';
-import '../../features/delivery/presentation/pages/order_pickup_page.dart';
+import '../../features/delivery/presentation/pages/pickup_pending_orders_page.dart';
 import '../../dependency_container.dart';
 
 Map<String, Widget Function(BuildContext)> routes = <String, WidgetBuilder>{
   '/': (context) => const AppScaffold(),
-  '/profile': (context) => const DeliverProfilePage(),
+  DeliverProfilePage.routeName: (context) => const DeliverProfilePage(),
   DeliveryScannerPage.routeName: (context) => const DeliveryScannerPage(),
   '/scan': (context) => QrScanner(
         options: (context, controller) {
@@ -23,6 +23,6 @@ Map<String, Widget Function(BuildContext)> routes = <String, WidgetBuilder>{
         },
       ),
   '/qr': (context) => QrViewPage(data: ModalRoute.of(context)!.settings.arguments as String),
-  '/pickup': (context) => const PickUpPendingOrderPage(),
+  '/pickup': (context) => const PickUpPendingOrdersPage(),
   '/dev': (context) => DevPage(sl: sl),
 };

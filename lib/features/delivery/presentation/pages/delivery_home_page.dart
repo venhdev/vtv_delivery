@@ -7,7 +7,7 @@ import 'package:vtv_common/core.dart';
 
 import '../../../../app_state.dart';
 import '../components/menu_action_item.dart';
-import '../pages/delivery_scanner_page.dart';
+import 'delivery_scanner_page.dart';
 
 //! json format for warehouse's qr
 // {
@@ -18,8 +18,8 @@ import '../pages/delivery_scanner_page.dart';
 const _menuLabelTextStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.w500);
 const _cashLabelTextStyle = TextStyle(fontSize: 12, fontWeight: FontWeight.w500);
 
-class FirstTabContent extends StatelessWidget {
-  const FirstTabContent({
+class DeliveryHomePage extends StatelessWidget {
+  const DeliveryHomePage({
     super.key,
   });
 
@@ -29,29 +29,19 @@ class FirstTabContent extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
+        if (typeWork == TypeWork.WAREHOUSE) Align(alignment: Alignment.topCenter, child: _warehouseQrCode()),
         //# app bar actions
         Align(
           alignment: Alignment.topLeft,
           child: IntrinsicHeight(
             child: Builder(
               builder: (context) {
-                if (typeWork == TypeWork.WAREHOUSE) {
-                  return _warehouseAppBar(context);
-                } else if (typeWork == TypeWork.PICKUP) {
+                // if (typeWork == TypeWork.WAREHOUSE) {
+                //   return _warehouseAppBar(context);
+                // } else
+                if (typeWork == TypeWork.PICKUP) {
                   //# view nearby orders
-                  return Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      MenuActionItem(
-                        label: 'Đơn hàng\n gần đây',
-                        icon: Icons.location_on_outlined,
-                        color: Colors.orange,
-                        size: 50,
-                        labelTextStyle: _cashLabelTextStyle,
-                        onPressed: () => Navigator.of(context).pushNamed('/pickup'),
-                      ),
-                    ],
-                  );
+                  return pickupAppBar(context);
                 } else {
                   return const SizedBox.shrink();
                 }
@@ -73,6 +63,48 @@ class FirstTabContent extends StatelessWidget {
               return const SizedBox.shrink();
             }),
           ),
+        ),
+      ],
+    );
+  }
+
+  Builder _warehouseQrCode() {
+    return Builder(builder: (context) {
+      final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
+      final warehouseWardCode = Provider.of<AppState>(context, listen: false).deliveryInfo!.wardCode;
+      return Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.orange.shade100,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.shade300),
+            ),
+            child: QrView(
+              data: jsonEncode({
+                'wU': warehouseUsername,
+                'wC': warehouseWardCode,
+              }),
+              size: 150,
+            ),
+          ),
+          const Text('QR của kho', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      );
+    });
+  }
+
+  Row pickupAppBar(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 8),
+        MenuActionItem(
+          label: 'Đơn hàng\n gần đây',
+          icon: Icons.location_on_outlined,
+          color: Colors.orange,
+          size: 50,
+          labelTextStyle: _cashLabelTextStyle,
+          onPressed: () => Navigator.of(context).pushNamed('/pickup'),
         ),
       ],
     );
@@ -151,24 +183,32 @@ class FirstTabContent extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        MenuActionItem(
-          label: typeWork == TypeWork.WAREHOUSE ? 'Lưu kho / Lấy hàng' : 'Chuẩn bị giao',
-          icon: Icons.qr_code_scanner,
-          color: Colors.blue,
-          labelTextStyle: _menuLabelTextStyle,
-          onPressed: () async {
-            await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
-          },
+        Tooltip(
+          message: typeWork == TypeWork.WAREHOUSE
+              ? 'Lưu kho đơn hàng từ người lấy hàng / shop'
+              : 'Lấy hàng từ kho để chuẩn bị giao',
+          child: MenuActionItem(
+            label: typeWork == TypeWork.WAREHOUSE ? 'Lưu kho / Nhận hàng' : 'Lấy hàng từ kho',
+            icon: Icons.qr_code_scanner,
+            color: Colors.blue,
+            labelTextStyle: _menuLabelTextStyle,
+            onPressed: () async {
+              await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
+            },
+          ),
         ),
         const SizedBox(width: 10),
-        MenuActionItem(
-          label: 'Giao hàng',
-          icon: Icons.assignment_turned_in_outlined,
-          color: Colors.green,
-          labelTextStyle: _menuLabelTextStyle,
-          onPressed: () async {
-            await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.deliver);
-          },
+        Tooltip(
+          message: 'Giao hàng cho khách',
+          child: MenuActionItem(
+            label: 'Giao cho khách',
+            icon: Icons.assignment_turned_in_outlined,
+            color: Colors.green,
+            labelTextStyle: _menuLabelTextStyle,
+            onPressed: () async {
+              await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.deliver);
+            },
+          ),
         ),
       ],
     );

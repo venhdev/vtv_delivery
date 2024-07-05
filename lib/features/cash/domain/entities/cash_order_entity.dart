@@ -37,7 +37,7 @@ class CashOrderEntity extends Equatable {
     if (shipperHold && !wareHouseHold && !handlePayment) {
       return 'Shipper đang giữ tiền';
     } else if (!shipperHold && !wareHouseHold && !handlePayment) {
-      return 'Đã gửi tiền cho kho'; //! only shipper can see this status at 3rd tab (has been sent money to warehouse)
+      return 'Đang giao'; //! only shipper can see this status at 3rd tab (has been sent money to warehouse)
     } else if (!shipperHold && wareHouseHold && !handlePayment) {
       return 'Warehouse đang giữ tiền';
     } else if (!shipperHold && !wareHouseHold && handlePayment) {
