@@ -15,6 +15,7 @@ enum DeliveryType {
   //*(1) - picker get order from shop PICKUP_PENDING >> PICKED_UP
   //*(2) - warehouse get order from shop PICKUP_PENDING >> WAREHOUSE --case vendor come to warehouse to send order
   //*(3) - warehouse get order from picker PICKED_UP >> WAREHOUSE --same1
+  //*(3'1) - warehouse get order from shipper SHIPPING >> WAREHOUSE -- when ship failed
   //!(4) - shipper get order from shop -> API not detect cash payment >> PICKED_UP
   //* (5) - shipper get order from warehouse WAREHOUSE >> SHIPPING
   pickup,
@@ -23,6 +24,8 @@ enum DeliveryType {
   //*(7) - shipper deliver to customer SHIPPING >> DELIVERED
   //(8) - warehouse give order to customer WAREHOUSE >> DELIVERED
   deliver,
+
+  returned,
 }
 
 class DeliveryScannerPage extends StatelessWidget {
@@ -61,9 +64,11 @@ class DeliveryScannerPage extends StatelessWidget {
         if (transport.status == OrderStatus.PICKUP_PENDING && currentWorkType == TypeWork.PICKUP) {
           //# (1) picker get order from shop
           return 'Lấy hàng';
-        } else if ((transport.status == OrderStatus.PICKUP_PENDING || transport.status == OrderStatus.PICKED_UP) &&
+        } else if ((transport.status == OrderStatus.PICKUP_PENDING ||
+                transport.status == OrderStatus.PICKED_UP ||
+                transport.status == OrderStatus.SHIPPING) &&
             currentWorkType == TypeWork.WAREHOUSE) {
-          //# (2,3) warehouse get order from shop/picker
+          //# (2, 3, 3'1) warehouse get order from shop/picker/shipper
           return 'Lưu kho';
         } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.SHIPPER) {
           //# (5) shipper get order from warehouse
@@ -80,6 +85,8 @@ class DeliveryScannerPage extends StatelessWidget {
           //# (8) warehouse give order to customer WAREHOUSE >> DELIVERED
           return 'Giao tại kho thành công';
         }
+
+      case DeliveryType.returned:
     }
     return null;
   }
@@ -108,9 +115,11 @@ class DeliveryScannerPage extends StatelessWidget {
                   transport.wardCodeShop,
                 );
               });
-        } else if ((transport.status == OrderStatus.PICKUP_PENDING || transport.status == OrderStatus.PICKED_UP) &&
+        } else if ((transport.status == OrderStatus.PICKUP_PENDING ||
+                transport.status == OrderStatus.PICKED_UP ||
+                transport.status == OrderStatus.SHIPPING) &&
             currentWorkType == TypeWork.WAREHOUSE) {
-          //# (2,3) warehouse get order from shop/picker
+          //# (2, 3, 3'1) warehouse get order from shop/picker/shipper
           final warehouseWardCode = Provider.of<AppState>(context, listen: false).deliveryInfo!.wardCode;
           return () async => await execute(context, controller, () {
                 return sl<DeliveryRepository>().updateStatusTransportByDeliver(
@@ -176,9 +185,61 @@ class DeliveryScannerPage extends StatelessWidget {
           };
         }
         return null; // after all, return null --no action
+      case DeliveryType.returned:
+      //TODO: implement return
       default:
         return null;
     }
+  }
+
+  String? cancelLabel(
+    BuildContext context,
+    TransportEntity transport,
+    DeliveryType type,
+  ) {
+    final TypeWork currentWorkType = TypeWork.values.firstWhere(
+      (e) => e.name == Provider.of<AppState>(context, listen: false).deliveryInfo?.typeWork,
+      orElse: () => TypeWork.Unknown,
+    );
+    if (currentWorkType == TypeWork.Unknown) return null;
+    switch (type) {
+      case DeliveryType.returned:
+        if (currentWorkType == TypeWork.PICKUP ||
+            currentWorkType == TypeWork.SHIPPER ||
+            currentWorkType == TypeWork.WAREHOUSE) {
+          return 'Trả hàng';
+        }
+      default:
+        return null;
+    }
+    return null;
+  }
+  //TODO test cancel return
+  void Function()? _handleOnCancel(
+    BuildContext context,
+    MobileScannerController controller,
+    TransportEntity transport,
+    DeliveryType type,
+  ) {
+    final TypeWork currentWorkType = TypeWork.values.firstWhere(
+      (e) => e.name == Provider.of<AppState>(context, listen: false).deliveryInfo?.typeWork,
+      orElse: () => TypeWork.Unknown,
+    );
+    if (currentWorkType == TypeWork.Unknown) return null;
+
+    switch (type) {
+      case DeliveryType.returned:
+        if (currentWorkType == TypeWork.PICKUP ||
+            currentWorkType == TypeWork.SHIPPER ||
+            currentWorkType == TypeWork.WAREHOUSE) {
+          return () async {
+            sl<DeliveryRepository>().cancelReturn(transport.transportId);
+          };
+        }
+      default:
+        return null;
+    }
+    return null;
   }
 
   @override
@@ -225,6 +286,8 @@ class DeliveryScannerPage extends StatelessWidget {
                           },
                           confirmLabel: confirmLabel(context, ok.data!, type),
                           onConfirm: _handleOnConfirm(context, controller, ok.data!, type),
+                          cancelLabel: cancelLabel(context, ok.data!, type),
+                          onCancel: _handleOnCancel(context, controller, ok.data!, type),
                         ),
                       );
                     } else {

@@ -47,8 +47,7 @@ class CustomScrollTabView extends StatefulWidget {
 
   factory CustomScrollTabView.shipper({
     Key? key,
-    required FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>,
-            FilterCashTransferParams>
+    required FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
         futureListController,
     bool isSlidable = false,
     void Function(BuildContext, DateTime)? onScanPressed,
@@ -76,8 +75,7 @@ class CustomScrollTabView extends StatefulWidget {
 
   factory CustomScrollTabView.warehouse({
     Key? key,
-    required FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>,
-            FilterCashTransferParams>
+    required FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
         futureListController,
     bool isSlidable = false,
     void Function(List<String>, CashOrderByDateResp)? onConfirmPressed,
@@ -346,11 +344,18 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         childCount: cashOnDate.cashOrders.length,
-        (context, index) => CashItem(
-          onPressed: () => widget.onCashItemPressed?.call(cashOnDate.cashOrders[index]),
-          cash: cashOnDate.cashOrders[index],
-          isWarehouse: widget.typeWork == TypeWork.WAREHOUSE,
-          showAddress: widget.showAddress,
+        (context, index) => Column(
+          children: [
+            const SizedBox(height: 4),
+            CashItem(
+              onPressed: widget.onCashItemPressed != null
+                  ? () => widget.onCashItemPressed!.call(cashOnDate.cashOrders[index])
+                  : null,
+              cash: cashOnDate.cashOrders[index],
+              isWarehouse: widget.typeWork == TypeWork.WAREHOUSE,
+              showAddress: widget.showAddress,
+            ),
+          ],
         ),
       ),
     );

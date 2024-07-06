@@ -20,6 +20,10 @@ abstract class DeliveryDataSource {
     bool handled,
     String wardCode,
   );
+
+  Future<SuccessResponse<TransportEntity>> cancelReturn(String transportId);
+
+  Future<SuccessResponse<TransportEntity>> successReturn(String transportId);
 }
 
 class DeliverDataSourceImpl implements DeliveryDataSource {
@@ -33,7 +37,7 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
 
     final response = await _dio.getUri(url);
 
-    return handleDioResponse<DeliverEntity, Map<String, dynamic>>(
+    return handleDioResponse<DeliverEntity, MapS>(
       response,
       url,
       parse: (jsonMap) => DeliverEntity.fromMap(jsonMap['deliverDTO']),
@@ -46,7 +50,7 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
 
     final response = await _dio.getUri(url);
 
-    return handleDioResponse<TransportResp, Map<String, dynamic>>(
+    return handleDioResponse<TransportResp, MapS>(
       response,
       url,
       parse: (jsonMap) => TransportResp.fromMap(jsonMap),
@@ -64,7 +68,7 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
 
     final response = await _dio.patchUri(url);
 
-    return handleDioResponse<TransportEntity, Map<String, dynamic>>(
+    return handleDioResponse<TransportEntity, MapS>(
       response,
       url,
       parse: (jsonMap) => TransportEntity.fromMap(jsonMap['transportDTO']),
@@ -77,20 +81,52 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
 
     final response = await _dio.getUri(url);
 
-    return handleDioResponse<TransportResp, Map<String, dynamic>>(
+    return handleDioResponse<TransportResp, MapS>(
       response,
       url,
       parse: (jsonMap) => TransportResp.fromMap(jsonMap),
     );
   }
-  
+
   @override
   Future<SuccessResponse<TransportEntity>> getTransportById(String transportId) async {
     final url = uriBuilder(path: '$kAPITransportGetURL/$transportId');
 
     final response = await _dio.getUri(url);
 
-    return handleDioResponse<TransportEntity, Map<String, dynamic>>(
+    return handleDioResponse<TransportEntity, MapS>(
+      response,
+      url,
+      parse: (jsonMap) => TransportEntity.fromMap(jsonMap['transportDTO']),
+    );
+  }
+
+  @override
+  Future<SuccessResponse<TransportEntity>> cancelReturn(String transportId) async {
+    final url = uriBuilder(
+      path: kAPITransportCancelReturnURL,
+      pathVariables: {'transportId': transportId},
+    );
+
+    final response = await _dio.patchUri(url);
+
+    return handleDioResponse<TransportEntity, MapS>(
+      response,
+      url,
+      parse: (jsonMap) => TransportEntity.fromMap(jsonMap['transportDTO']),
+    );
+  }
+
+  @override
+  Future<SuccessResponse<TransportEntity>> successReturn(String transportId) async {
+    final url = uriBuilder(
+      path: kAPITransportSuccessReturnURL,
+      pathVariables: {'transportId': transportId},
+    );
+
+    final response = await _dio.patchUri(url);
+
+    return handleDioResponse<TransportEntity, MapS>(
       response,
       url,
       parse: (jsonMap) => TransportEntity.fromMap(jsonMap['transportDTO']),

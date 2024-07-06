@@ -99,12 +99,23 @@ class DeliveryHomePage extends StatelessWidget {
       children: [
         const SizedBox(width: 8),
         MenuActionItem(
-          label: 'Đơn hàng\n gần đây',
+          label: 'Đơn hàng\ngần đây',
           icon: Icons.location_on_outlined,
           color: Colors.orange,
           size: 50,
           labelTextStyle: _cashLabelTextStyle,
           onPressed: () => Navigator.of(context).pushNamed('/pickup'),
+        ),
+        const SizedBox(width: 8),
+        MenuActionItem(
+          label: 'Trả hàng',
+          icon: Icons.qr_code_scanner,
+          color: Colors.orange,
+          size: 50,
+          labelTextStyle: _cashLabelTextStyle,
+          onPressed: () {
+            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.returned);
+          },
         ),
       ],
     );

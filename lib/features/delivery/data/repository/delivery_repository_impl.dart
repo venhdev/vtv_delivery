@@ -53,4 +53,14 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
       (ok) => Right(SuccessResponse(data: ok.data!.wardCodeCustomer)),
     );
   }
+
+  @override
+  FRespData<TransportEntity> cancelReturn(String transportId) async {
+    return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.cancelReturn(transportId));
+  }
+
+  @override
+  FRespData<TransportEntity> successReturn(String transportId) async {
+    return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.successReturn(transportId));
+  }
 }

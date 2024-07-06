@@ -14,14 +14,19 @@ class TransportInfo extends StatelessWidget {
     required this.onConfirm,
     this.confirmLabel,
     this.reScanLabel,
+    this.cancelLabel,
+    this.onCancel,
   });
   final TransportEntity transport;
 
+  final String? reScanLabel;
   final VoidCallback? onReScan;
-  final VoidCallback? onConfirm;
 
   final String? confirmLabel;
-  final String? reScanLabel;
+  final VoidCallback? onConfirm;
+
+  final String? cancelLabel;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +88,13 @@ class TransportInfo extends StatelessWidget {
                 style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.blue.shade100)),
                 child: Text(reScanLabel ?? 'Quét lại'),
               ),
+              const SizedBox(width: 8),
+              if (onCancel != null)
+                ElevatedButton(
+                  onPressed: onCancel,
+                  style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.red.shade100)),
+                  child: Text(cancelLabel ?? 'Hủy bỏ'),
+                ),
               const SizedBox(width: 8),
               if (onConfirm != null)
                 ElevatedButton(

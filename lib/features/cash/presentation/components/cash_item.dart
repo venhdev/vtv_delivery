@@ -19,8 +19,9 @@ class CashItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
+      borderRadius: BorderRadius.circular(4),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 3),
+        // margin: const EdgeInsets.symmetric(vertical: 3),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey),
