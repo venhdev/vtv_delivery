@@ -86,7 +86,7 @@ class ShopAndTransport extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.directions),
                 onPressed: () {
-                  MapUtils.openMapWithQuery(shopAndTransport.shop.address);
+                  LaunchUtils.openMapWithQuery(shopAndTransport.shop.address);
                 },
               ),
             ],

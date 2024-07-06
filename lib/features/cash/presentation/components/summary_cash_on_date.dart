@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vtv_common/core.dart';
 
-import '../../domain/entities/cash_order_by_date_entity.dart';
+import '../../domain/entities/response/cash_order_by_date_resp.dart';
 
 class SummaryCashOnDate extends StatelessWidget {
   const SummaryCashOnDate({
@@ -10,7 +10,7 @@ class SummaryCashOnDate extends StatelessWidget {
     this.endBuilder,
   });
 
-  final CashOrderByDateEntity cashOnDate;
+  final CashOrderByDateResp cashOnDate;
   final WidgetBuilder? endBuilder;
 
   @override

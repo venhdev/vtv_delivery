@@ -35,3 +35,7 @@ const String kAPICashOrderHistoryByShipperURL = '/shipping/cash-order/history-by
 // GET
 // /api/shipping/cash-order/all-by-shipper
 const String kAPICashOrderAllByShipperURL = '/shipping/cash-order/all-by-shipper';
+
+// GET
+// /api/shipping/cash-order/detail/{cashOrderId}
+const String kAPICashOrderDetailURL = '/shipping/cash-order/detail';

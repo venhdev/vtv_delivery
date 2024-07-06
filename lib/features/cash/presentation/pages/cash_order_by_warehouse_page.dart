@@ -6,9 +6,9 @@ import 'package:vtv_common/auth.dart';
 import 'package:vtv_common/core.dart';
 
 import '../../../../dependency_container.dart';
-import '../../domain/entities/cash_order_by_date_entity.dart';
+import '../../domain/entities/response/cash_order_by_date_resp.dart';
 import '../../domain/entities/request/transfer_money_request.dart';
-import '../../domain/entities/response/cash_order_response.dart';
+import '../../domain/entities/response/cash_order_resp.dart';
 import '../../domain/repository/cash_repository.dart';
 import '../common/filter_cash_method.dart';
 import '../components/custom_scroll_tab_view.dart';
@@ -22,14 +22,14 @@ class CashOrderByWarehousePage extends StatefulWidget {
 
 class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  late FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       _warehouseUnderConfirmationListController;
-  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  late FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       _warehouseDeliveredListController;
 
-  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  late FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       _warehouseHoldingListController;
-  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  late FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       _warehouseTransferredListController;
 
   final _tabs = <Tab>[
@@ -69,7 +69,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
     _tabController = TabController(length: _tabs.length, vsync: this);
 
     _warehouseUnderConfirmationListController = FilterListController(
-        items: <CashOrderByDateEntity>[],
+        items: <CashOrderByDateResp>[],
         filterParams: FilterCashTransferParams(),
         futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseUnderConfirmationReceived),
         parse: (unparsedData, onParseError) {
@@ -89,7 +89,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
 
     //? this case, warehouse is shipper
     _warehouseDeliveredListController = FilterListController(
-        items: <CashOrderByDateEntity>[],
+        items: <CashOrderByDateResp>[],
         filterParams: FilterCashTransferParams(),
         futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperHolding),
         parse: (unparsedData, onParseError) {
@@ -108,7 +108,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
       ..init();
 
     _warehouseHoldingListController = FilterListController(
-        items: <CashOrderByDateEntity>[],
+        items: <CashOrderByDateResp>[],
         filterParams: FilterCashTransferParams(),
         futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseHolding),
         parse: (unparsedData, onParseError) {
@@ -127,7 +127,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
       ..init();
 
     _warehouseTransferredListController = FilterListController(
-        items: <CashOrderByDateEntity>[],
+        items: <CashOrderByDateResp>[],
         filterParams: FilterCashTransferParams(),
         futureCallback: () => sl<CashRepository>().historyByWareHouse(HistoryType.warehouseHasTransferredToShop),
         parse: (unparsedData, onParseError) {
@@ -190,7 +190,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
     );
   }
 
-  void handleWarehouseConfirmRequestPressed(List<String> cashOrderIds, CashOrderByDateEntity cashOnDate) async {
+  void handleWarehouseConfirmRequestPressed(List<String> cashOrderIds, CashOrderByDateResp cashOnDate) async {
     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
     if (warehouseUsername == null) return;
 
@@ -226,7 +226,7 @@ class _CashOrderByWarehousePageState extends State<CashOrderByWarehousePage> wit
 
   //? at this case, warehouse is shipper
   void handleWarehouseConfirmDeliveredAtStoragePressed(
-      List<String> cashOrderIds, CashOrderByDateEntity cashOnDate) async {
+      List<String> cashOrderIds, CashOrderByDateResp cashOnDate) async {
     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
     if (warehouseUsername == null) return;
 
@@ -278,14 +278,14 @@ class DeliveredByShipperAndWarehouse extends StatefulWidget {
   });
 
   // _warehouseUnderConfirmationListController
-  final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  final FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       shipperDeliveredListController;
 
-  final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  final FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       warehouseDeliveredListController;
 
-  final void Function(List<String>, CashOrderByDateEntity) onWarehouseConfirmShipperRequestPressed;
-  final void Function(List<String>, CashOrderByDateEntity) onWarehouseConfirmDeliveredAtStoragePressed;
+  final void Function(List<String>, CashOrderByDateResp) onWarehouseConfirmShipperRequestPressed;
+  final void Function(List<String>, CashOrderByDateResp) onWarehouseConfirmDeliveredAtStoragePressed;
 
   @override
   State<DeliveredByShipperAndWarehouse> createState() => _DeliveredByShipperAndWarehouseState();

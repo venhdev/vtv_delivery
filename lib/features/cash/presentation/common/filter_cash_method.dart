@@ -1,15 +1,15 @@
-import '../../domain/entities/cash_order_by_date_entity.dart';
+import '../../domain/entities/response/cash_order_by_date_resp.dart';
 import '../components/custom_scroll_tab_view.dart';
 
-List<CashOrderByDateEntity> filterCashMethod(
-  List<CashOrderByDateEntity> currentItems,
-  List<CashOrderByDateEntity> filteredItems,
+List<CashOrderByDateResp> filterCashMethod(
+  List<CashOrderByDateResp> currentItems,
+  List<CashOrderByDateResp> filteredItems,
   FilterCashTransferParams params,
 ) {
   DateTime? filterDate = params.filterDate;
   String? filterShipper = params.filterShipper;
 
-  List<CashOrderByDateEntity> rs = [...currentItems];
+  List<CashOrderByDateResp> rs = [...currentItems];
 
   if (filterDate != null) {
     filterDate = DateTime(filterDate.year, filterDate.month, filterDate.day);

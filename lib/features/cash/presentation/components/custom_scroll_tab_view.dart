@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:vtv_common/core.dart';
 
-import '../../domain/entities/cash_order_by_date_entity.dart';
+import '../../domain/entities/response/cash_order_by_date_resp.dart';
+import '../../domain/entities/cash_order_entity.dart';
 import 'cash_item.dart';
 import 'filter_cash_transfer_dialog.dart';
 import 'summary_cash_on_date.dart';
@@ -41,17 +42,19 @@ class CustomScrollTabView extends StatefulWidget {
     this.onConfirmPressed,
     this.onStorePressed,
     required this.warehouseSlideEndLabel,
+    this.onCashItemPressed,
   });
 
   factory CustomScrollTabView.shipper({
     Key? key,
-    required FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>,
+    required FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>,
             FilterCashTransferParams>
         futureListController,
     bool isSlidable = false,
     void Function(BuildContext, DateTime)? onScanPressed,
     void Function(BuildContext, DateTime)? onInsertPressed,
     void Function(BuildContext, DateTime)? onStorePressed,
+    ValueCallback<CashOrderEntity>? onCashItemPressed,
     VoidCallback? onRefresh,
     bool showAddress = false,
     bool canChangeShipper = false,
@@ -67,16 +70,17 @@ class CustomScrollTabView extends StatefulWidget {
       showAddress: showAddress,
       canChangeShipper: canChangeShipper,
       warehouseSlideEndLabel: 'Xác nhận',
+      onCashItemPressed: onCashItemPressed,
     );
   }
 
   factory CustomScrollTabView.warehouse({
     Key? key,
-    required FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>,
+    required FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>,
             FilterCashTransferParams>
         futureListController,
     bool isSlidable = false,
-    void Function(List<String>, CashOrderByDateEntity)? onConfirmPressed,
+    void Function(List<String>, CashOrderByDateResp)? onConfirmPressed,
     VoidCallback? onRefresh,
     bool showAddress = false,
     bool canChangeShipper = true,
@@ -94,7 +98,7 @@ class CustomScrollTabView extends StatefulWidget {
     );
   }
 
-  final FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  final FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       listController;
 
   final TypeWork typeWork;
@@ -102,13 +106,15 @@ class CustomScrollTabView extends StatefulWidget {
   final bool showAddress;
   final bool canChangeShipper;
 
+  final ValueCallback<CashOrderEntity>? onCashItemPressed;
+
   //# shipper action
   final void Function(BuildContext, DateTime)? onScanPressed;
   final void Function(BuildContext, DateTime)? onInsertPressed;
-  final void Function(BuildContext, DateTime)? onStorePressed;
+  final void Function(BuildContext, DateTime)? onStorePressed; //! the API logic not allow shipper to store
 
   //# warehouse action
-  final void Function(List<String>, CashOrderByDateEntity)? onConfirmPressed;
+  final void Function(List<String>, CashOrderByDateResp)? onConfirmPressed;
 
   // style
   final String warehouseSlideEndLabel;
@@ -123,7 +129,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
   late final AnimationController _animationController;
   late final Animation<Offset> _offsetAnimation;
 
-  List<String> getCashOrderIdsByDate(DateTime date, List<CashOrderByDateEntity> items) {
+  List<String> getCashOrderIdsByDate(DateTime date, List<CashOrderByDateResp> items) {
     return items
         .where((element) => element.date == date)
         .expand((element) => element.cashOrders)
@@ -315,7 +321,7 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     );
   }
 
-  ActionPane _warehouseSlideEnd(CashOrderByDateEntity cashOnDate) {
+  ActionPane _warehouseSlideEnd(CashOrderByDateResp cashOnDate) {
     return ActionPane(
       motion: const ScrollMotion(),
       extentRatio: 0.3,
@@ -336,11 +342,12 @@ class _CustomScrollTabViewState extends State<CustomScrollTabView> with SingleTi
     );
   }
 
-  SliverList _sliverList(CashOrderByDateEntity cashOnDate) {
+  SliverList _sliverList(CashOrderByDateResp cashOnDate) {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         childCount: cashOnDate.cashOrders.length,
         (context, index) => CashItem(
+          onPressed: () => widget.onCashItemPressed?.call(cashOnDate.cashOrders[index]),
           cash: cashOnDate.cashOrders[index],
           isWarehouse: widget.typeWork == TypeWork.WAREHOUSE,
           showAddress: widget.showAddress,

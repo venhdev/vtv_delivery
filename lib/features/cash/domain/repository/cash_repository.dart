@@ -1,45 +1,24 @@
 import 'package:delivery/features/cash/domain/entities/request/transfer_money_request.dart';
 import 'package:vtv_common/core.dart';
 
-import '../entities/cash_order_by_date_entity.dart';
-import '../entities/response/cash_order_response.dart';
+import '../entities/response/cash_order_by_date_resp.dart';
+import '../entities/response/cash_order_detail_resp.dart';
+import '../entities/response/cash_order_resp.dart';
 
 abstract class CashRepository {
   //# cash-order-controller
-  // POST
-  // /api/shipping/cash-order/updates/transfers-money-warehouse
-  // const String kAPICashOrderTransfersMoneyWarehouseURL = '/shipping/cash-order/updates/transfers-money-warehouse';
   FRespData<CashOrderResp> requestTransfersMoneyToWarehouseByShipper(TransferMoneyRequest req);
-  // POST
-  // /api/shipping/cash-order/updates/confirm-money-warehouse
-  // const String kAPICashOrderConfirmMoneyWarehouseURL = '/shipping/cash-order/updates/confirm-money-warehouse';
   FRespData<CashOrderResp> confirmTransfersMoneyByWarehouse(TransferMoneyRequest req);
-
-  // GET
-  // /api/shipping/cash-order/list-by-wave-house
-  // const String kAPICashOrderListByWareHouseURL = '/shipping/cash-order/list-by-wave-house';
-  FRespData<CashOrderResp> listByWareHouse();
-
-  // GET
-  // /api/shipping/cash-order/history-by-warehouse
-  // const String kAPICashOrderHistoryByWarehouseURL = '/shipping/cash-order/history-by-warehouse';
-  FRespData<List<CashOrderByDateEntity>> historyByWareHouse(({bool warehouseHold, bool handlePayment}) warehouseType);
-
-  // GET
-  // /api/shipping/cash-order/history-by-shipper
-  // const String kAPICashOrderHistoryByShipperURL = '/shipping/cash-order/history-by-shipper';
-  FRespData<List<CashOrderByDateEntity>> historyByShipper(({bool shipperHold, bool shipping}) shipperType);
-
-  // GET
-  // /api/shipping/cash-order/all-by-shipper
-  // const String kAPICashOrderAllByShipperURL = '/shipping/cash-order/all-by-shipper';
-  FRespData<CashOrderResp> listByShipper();
+  // FRespData<CashOrderResp> listByWareHouse();
+  FRespData<List<CashOrderByDateResp>> historyByWareHouse(({bool warehouseHold, bool handlePayment}) warehouseType);
+  FRespData<List<CashOrderByDateResp>> historyByShipper(({bool shipperHold, bool shipping}) shipperType);
+  FRespData<CashOrderDetailResp> getCashOrderDetailById(String cashOrderId);
 }
 
 class HistoryType {
   //# shipper
-  //! error...
-  /// shipper is holding order (not shipping to customer yet)
+  /// shipper is holding order (not shipping to customer yet) 
+  //NOTE: only work when get order from warehouse (not from shop --this case no cash created)
   static ({bool shipperHold, bool shipping}) shipperShipping = (shipperHold: false, shipping: true);
 
   /// shipper is holding money (shipping to customer successfully, but not yet transferred to warehouse)

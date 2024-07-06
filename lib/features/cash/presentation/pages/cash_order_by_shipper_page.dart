@@ -7,11 +7,12 @@ import 'package:vtv_common/core.dart';
 
 import '../../../../dependency_container.dart';
 import '../../../delivery/domain/repository/delivery_repository.dart';
-import '../../domain/entities/cash_order_by_date_entity.dart';
+import '../../domain/entities/response/cash_order_by_date_resp.dart';
 import '../../domain/entities/request/transfer_money_request.dart';
-import '../../domain/entities/response/cash_order_response.dart';
+import '../../domain/entities/response/cash_order_resp.dart';
 import '../../domain/repository/cash_repository.dart';
 import '../common/filter_cash_method.dart';
+import '../components/cash_order_detail_dialog.dart';
 import '../components/custom_scroll_tab_view.dart';
 
 class CashOrderByShipperPage extends StatefulWidget {
@@ -23,11 +24,11 @@ class CashOrderByShipperPage extends StatefulWidget {
 
 class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  late FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       _shipperShippingListController;
-  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  late FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       _shipperHoldingListController;
-  late FilterListController<CashOrderByDateEntity, RespData<List<CashOrderByDateEntity>>, FilterCashTransferParams>
+  late FilterListController<CashOrderByDateResp, RespData<List<CashOrderByDateResp>>, FilterCashTransferParams>
       _shipperTransferredListController;
 
   final _tabs = <Tab>[
@@ -41,7 +42,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
     _shipperShippingListController = FilterListController(
-      items: <CashOrderByDateEntity>[],
+      items: <CashOrderByDateResp>[],
       filterParams: FilterCashTransferParams(),
       futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperShipping),
       parse: (unparsedData, onParseError) {
@@ -62,7 +63,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
       ..init();
 
     _shipperHoldingListController = FilterListController(
-      items: <CashOrderByDateEntity>[],
+      items: <CashOrderByDateResp>[],
       filterParams: FilterCashTransferParams(),
       futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperHolding),
       parse: (unparsedData, onParseError) {
@@ -83,7 +84,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
       ..init();
 
     _shipperTransferredListController = FilterListController(
-      items: <CashOrderByDateEntity>[],
+      items: <CashOrderByDateResp>[],
       filterParams: FilterCashTransferParams(),
       futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperTransferred),
       parse: (unparsedData, onParseError) {
@@ -125,14 +126,17 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
                 CustomScrollTabView.shipper(
                   futureListController: _shipperShippingListController,
                   showAddress: true,
-                  isSlidable: true,
-                  onStorePressed: handleStoreOrdersByShipper,
+                  onCashItemPressed: (cashOrder) async => await showDialog(
+                      context: context,
+                      builder: (context) {
+                        return CashOrderDetailDialog(cashOrderId: cashOrder.cashOrderId);
+                      }),
                 ),
                 //# shipper holding
                 CustomScrollTabView.shipper(
                   futureListController: _shipperHoldingListController,
                   isSlidable: true,
-                  onScanPressed: handleTransferCashViaWarehouseQr,
+                  onScanPressed: handleTransferCashViaScanWarehouseQr,
                   onInsertPressed: handleTransferCashViaTypeUsername,
                 ),
                 //# shipper has transferred to warehouse
@@ -191,6 +195,7 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
           closeBy: (context, result) => Navigator.of(context).pop(result));
     }
   }
+
   // BUG: cannot use this function because the role is shipper
   void handleStoreOrdersByShipper(BuildContext _, DateTime date) async {
     final data = await Navigator.of(context).pushNamed('/scan') as String?;
@@ -285,16 +290,17 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
     await processTransfer(warehouseUsername, date);
   }
 
-  void handleTransferCashViaWarehouseQr(BuildContext _, DateTime date) async {
-    // {wU: '<warehouse's username>', wC: '12345'}
+  void handleTransferCashViaScanWarehouseQr(BuildContext _, DateTime date) async {
     final data = await Navigator.of(context).pushNamed('/scan') as String?;
     if (data == null || !mounted) return;
-    // log('data: $data');
-    final parsed = jsonDecode(data) as Map<String, dynamic>;
-    // log('parsed: $parsed');
+    Map<String, dynamic> parsed;
 
-    // Logger().e('Scanned data: ${parsed['wU']}');
-    // Logger().e('Scanned data: ${parsed['wC']}');
+    try {
+      parsed = jsonDecode(data) as Map<String, dynamic>;
+    } catch (e) {
+      Fluttertoast.showToast(msg: 'QR không hợp lệ');
+      return;
+    }
 
     processTransfer(parsed['wU'], date);
   }
