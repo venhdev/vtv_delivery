@@ -38,7 +38,7 @@ class CashOrderDetailDialog extends StatelessWidget {
   }
 
   Widget _build(BuildContext context, CashOrderDetailResp cashOrderDetail) {
-    final isWarehouse = Provider.of<AppState>(context, listen: false).typeWork == TypeWork.WAREHOUSE;
+    final typeWork = Provider.of<AppState>(context, listen: false).typeWork;
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(8),
@@ -61,9 +61,10 @@ class CashOrderDetailDialog extends StatelessWidget {
               list: {
                 'Mã giao dịch': cashOrderDetail.cash.orderId,
                 'Mã vận chuyển': cashOrderDetail.cash.transportId,
-                'Trạng thái':
-                    isWarehouse ? cashOrderDetail.cash.statusNameByWarehouse : cashOrderDetail.cash.statusNameByShipper,
-                if (isWarehouse) 'Shipper': cashOrderDetail.cash.shipperUsername,
+                'Trạng thái': (typeWork == TypeWork.WAREHOUSE)
+                    ? cashOrderDetail.cash.statusNameByWarehouse
+                    : cashOrderDetail.cash.statusNameByShipper,
+                if (typeWork == TypeWork.WAREHOUSE) 'Shipper': cashOrderDetail.cash.shipperUsername,
                 'Số tiền': ConversionUtils.formatCurrency(cashOrderDetail.cash.money),
                 'Ngày tạo':
                     ConversionUtils.convertDateTimeToString(cashOrderDetail.cash.createAt, pattern: 'dd/MM/yyyy HH:mm'),
@@ -140,40 +141,42 @@ class CashOrderDetailDialog extends StatelessWidget {
             ),
 
             //# button delivery success
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade100,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () async {
-                // get transportId and then check if it's the same as the current order
-                final scannedTransportId = await Navigator.of(context).pushNamed('/scan') as String?;
-                if (scannedTransportId != null &&
-                    context.mounted &&
-                    cashOrderDetail.cash.transportId == scannedTransportId) {
-                  // update status to DELIVERED
-                  final resp = await showDialogToPerform(
-                    context,
-                    dataCallback: () => sl<DeliveryRepository>().updateStatusTransportByDeliver(
-                      cashOrderDetail.cash.transportId,
-                      OrderStatus.DELIVERED,
-                      true,
-                      cashOrderDetail.order.address.wardCode,
-                    ),
-                    closeBy: (context, result) => Navigator.of(context).pop(result),
-                  );
-                  if (resp != null) {
-                    showToastResult(
-                      resp,
-                      successMsg: 'Giao hàng thành công',
-                      onSuccess: () => Navigator.of(context).pop(), // pop this dialog
+            if (typeWork == TypeWork.WAREHOUSE || typeWork == TypeWork.SHIPPER) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade100,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () async {
+                  // get transportId and then check if it's the same as the current order
+                  final scannedTransportId = await Navigator.of(context).pushNamed('/scan') as String?;
+                  if (scannedTransportId != null &&
+                      context.mounted &&
+                      cashOrderDetail.cash.transportId == scannedTransportId) {
+                    // update status to DELIVERED
+                    final resp = await showDialogToPerform(
+                      context,
+                      dataCallback: () => sl<DeliveryRepository>().updateStatusTransportByDeliver(
+                        cashOrderDetail.cash.transportId,
+                        OrderStatus.DELIVERED,
+                        true,
+                        cashOrderDetail.order.address.wardCode,
+                      ),
+                      closeBy: (context, result) => Navigator.of(context).pop(result),
                     );
+                    if (resp != null) {
+                      showToastResult(
+                        resp,
+                        successMsg: 'Giao hàng thành công',
+                        onSuccess: () => Navigator.of(context).pop(), // pop this dialog
+                      );
+                    }
                   }
-                }
-              },
-              child: const Text('Giao hàng thành công'),
-            ),
+                },
+                child: const Text('Giao hàng thành công'),
+              ),
+            ]
           ],
         ),
       ),

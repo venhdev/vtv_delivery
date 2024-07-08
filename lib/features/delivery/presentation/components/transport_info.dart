@@ -5,6 +5,7 @@ import 'package:vtv_common/order.dart';
 import 'package:vtv_common/profile.dart';
 
 import '../../../../dependency_container.dart';
+import '../../../cash/presentation/components/cash_order_detail_dialog.dart';
 
 class TransportInfo extends StatelessWidget {
   const TransportInfo({
@@ -36,7 +37,7 @@ class TransportInfo extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(8.0),
-      margin: const EdgeInsets.symmetric(horizontal: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white12,
         border: Border.all(color: Colors.white60),
@@ -68,39 +69,45 @@ class TransportInfo extends StatelessWidget {
           ),
           Text('Phương thức vận chuyển: ${transport.shippingMethod}', style: textStyle),
           Text('Trạng thái: ${StringUtils.getOrderStatusName(transport.status)}', style: textStyle),
-
+    
           AddressByWardCode(
               futureData: sl<GuestRepository>().getAddressByWardCode(transport.wardCodeShop),
               prefix: 'Địa chỉ shop: (${transport.wardCodeShop}) ',
               style: textStyle),
-
+    
           AddressByWardCode(
               futureData: sl<GuestRepository>().getAddressByWardCode(transport.wardCodeCustomer),
               prefix: 'Địa chỉ khách hàng: (${transport.wardCodeCustomer}) ',
               style: textStyle),
-
+    
           //# actions: cancel, re-scan, confirm and re-scan
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(
-                onPressed: onReScan,
-                style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.blue.shade100)),
-                child: Text(reScanLabel ?? 'Quét lại'),
-              ),
-              const SizedBox(width: 8),
+              // ElevatedButton(
+              //   onPressed: onReScan,
+              //   style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.blue.shade100)),
+              //   child: Text(reScanLabel ?? 'Quét lại'),
+              // ),
+              // const SizedBox(width: 8),
               if (onCancel != null)
-                ElevatedButton(
-                  onPressed: onCancel,
-                  style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.red.shade100)),
-                  child: Text(cancelLabel ?? 'Hủy bỏ'),
+                Flexible(
+                  flex: 1,
+                  child: ElevatedButton(
+                    onPressed: onCancel,
+                    style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.red.shade100)),
+                    child: Text(cancelLabel ?? 'Hủy bỏ'),
+                  ),
                 ),
               const SizedBox(width: 8),
               if (onConfirm != null)
-                ElevatedButton(
-                  onPressed: onConfirm,
-                  style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.green.shade100)),
-                  child: Text(confirmLabel ?? 'Xác nhận'),
+                Flexible(
+                  flex: 1,
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.green.shade100)),
+                    child: Text(confirmLabel ?? 'Xác nhận'),
+                  ),
                 ),
             ],
           ),

@@ -29,19 +29,21 @@ class DeliveryHomePage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (typeWork == TypeWork.WAREHOUSE) Align(alignment: Alignment.topCenter, child: _warehouseQrCode()),
+        // if (typeWork == TypeWork.WAREHOUSE) Align(alignment: Alignment.topCenter, child: _warehouseQrCode()),
         //# app bar actions
         Align(
           alignment: Alignment.topLeft,
           child: IntrinsicHeight(
             child: Builder(
               builder: (context) {
-                // if (typeWork == TypeWork.WAREHOUSE) {
-                //   return _warehouseAppBar(context);
-                // } else
-                if (typeWork == TypeWork.PICKUP) {
+                if (typeWork == TypeWork.WAREHOUSE) {
+                  return _warehouseAppBar(context);
+                } else if (typeWork == TypeWork.PICKUP) {
                   //# view nearby orders
-                  return pickupAppBar(context);
+                  return _pickupAppBar(context);
+                } else if (typeWork == TypeWork.SHIPPER) {
+                  //# view nearby orders
+                  return _shipperAppBar(context);
                 } else {
                   return const SizedBox.shrink();
                 }
@@ -68,36 +70,36 @@ class DeliveryHomePage extends StatelessWidget {
     );
   }
 
-  Builder _warehouseQrCode() {
-    return Builder(builder: (context) {
-      final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
-      final warehouseWardCode = Provider.of<AppState>(context, listen: false).deliveryInfo!.wardCode;
-      return Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.orange.shade100,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.shade300),
-            ),
-            child: QrView(
-              data: jsonEncode({
-                'wU': warehouseUsername,
-                'wC': warehouseWardCode,
-              }),
-              size: 150,
-            ),
-          ),
-          const Text('QR của kho', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        ],
-      );
-    });
-  }
+  // Builder _warehouseQrCode() {
+  //   return Builder(builder: (context) {
+  //     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
+  //     final warehouseWardCode = Provider.of<AppState>(context, listen: false).deliveryInfo!.wardCode;
+  //     return Column(
+  //       children: [
+  //         Container(
+  //           decoration: BoxDecoration(
+  //             color: Colors.orange.shade100,
+  //             borderRadius: BorderRadius.circular(8),
+  //             border: Border.all(color: Colors.orange.shade300),
+  //           ),
+  //           child: QrView(
+  //             data: jsonEncode({
+  //               'wU': warehouseUsername,
+  //               'wC': warehouseWardCode,
+  //             }),
+  //             size: 150,
+  //           ),
+  //         ),
+  //         const Text('QR của kho', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+  //       ],
+  //     );
+  //   });
+  // }
 
-  Row pickupAppBar(BuildContext context) {
+  Row _pickupAppBar(BuildContext context) {
     return Row(
       children: [
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         MenuActionItem(
           label: 'Đơn hàng\ngần đây',
           icon: Icons.location_on_outlined,
@@ -106,15 +108,33 @@ class DeliveryHomePage extends StatelessWidget {
           labelTextStyle: _cashLabelTextStyle,
           onPressed: () => Navigator.of(context).pushNamed('/pickup'),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         MenuActionItem(
           label: 'Trả hàng',
           icon: Icons.qr_code_scanner,
-          color: Colors.orange,
+          color: Colors.redAccent,
           size: 50,
           labelTextStyle: _cashLabelTextStyle,
           onPressed: () {
-            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.returned);
+            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
+          },
+        ),
+      ],
+    );
+  }
+
+  Row _shipperAppBar(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 16),
+        MenuActionItem(
+          label: 'Trả hàng',
+          icon: Icons.qr_code_scanner,
+          color: Colors.redAccent,
+          size: 50,
+          labelTextStyle: _cashLabelTextStyle,
+          onPressed: () {
+            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
           },
         ),
       ],
@@ -156,7 +176,7 @@ class DeliveryHomePage extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(width: 10),
+        const SizedBox(width: 16),
         //# warehouse's qr
         MenuActionItem(
           label: 'QR của kho',
@@ -172,6 +192,18 @@ class DeliveryHomePage extends StatelessWidget {
               'wC': warehouseWardCode,
             });
             Navigator.of(context).pushNamed('/qr', arguments: data);
+          },
+        ),
+
+        const SizedBox(width: 16),
+        MenuActionItem(
+          label: 'Trả hàng',
+          icon: Icons.qr_code_scanner,
+          color: Colors.cyan,
+          size: 50,
+          labelTextStyle: _cashLabelTextStyle,
+          onPressed: () {
+            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
           },
         ),
 

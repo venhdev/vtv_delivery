@@ -108,7 +108,10 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
       pathVariables: {'transportId': transportId},
     );
 
-    final response = await _dio.patchUri(url);
+    final response = await _dio.patchUri(
+      url,
+      data: transportId,
+    );
 
     return handleDioResponse<TransportEntity, MapS>(
       response,
@@ -124,7 +127,10 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
       pathVariables: {'transportId': transportId},
     );
 
-    final response = await _dio.patchUri(url);
+    final response = await _dio.patchUri(
+      url,
+      data: transportId,
+    );
 
     return handleDioResponse<TransportEntity, MapS>(
       response,

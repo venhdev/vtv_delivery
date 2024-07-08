@@ -9,7 +9,7 @@ abstract class DeliveryRepository {
   FRespData<DeliverEntity> getDeliverInfo();
 
   //# transport-controller
-  FRespData<TransportEntity> successReturn(String transportId);
+  FRespData<TransportEntity> acceptReturn(String transportId);
   FRespData<TransportEntity> cancelReturn(String transportId);
   FRespData<TransportEntity> getTransportById(String transportId);
   FRespData<String> getCustomerWardCodeByTransportId(String transportId); // custom

@@ -157,13 +157,19 @@ class _AppScaffoldWithBottomNavigationState extends State<_AppScaffoldWithBottom
   }
 
   Widget? _bottomNavigationBar() {
-    return BottomNavigationBar(
-      onTap: _onItemTapped,
-      currentIndex: _selectedIndex,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
-        BottomNavigationBarItem(icon: Icon(Icons.article_rounded), label: 'Đơn hàng'),
-      ],
-    );
+    final typeWork = Provider.of<AppState>(context).typeWork;
+    final isShowNavBar = (typeWork == TypeWork.SHIPPER || typeWork == TypeWork.WAREHOUSE);
+    if (isShowNavBar) {
+      return BottomNavigationBar(
+        onTap: _onItemTapped,
+        currentIndex: _selectedIndex,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+          BottomNavigationBarItem(icon: Icon(Icons.article_rounded), label: 'Đơn hàng'),
+        ],
+      );
+    } else {
+      return null;
+    }
   }
 }

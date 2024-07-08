@@ -60,7 +60,7 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   }
 
   @override
-  FRespData<TransportEntity> successReturn(String transportId) async {
+  FRespData<TransportEntity> acceptReturn(String transportId) async {
     return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.successReturn(transportId));
   }
 }
