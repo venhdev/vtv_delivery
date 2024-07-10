@@ -63,4 +63,19 @@ class DeliveryRepositoryImpl implements DeliveryRepository {
   FRespData<TransportEntity> acceptReturn(String transportId) async {
     return await handleDataResponseFromDataSource(dataCallback: () => _dataSource.successReturn(transportId));
   }
+
+  @override
+  FRespData<TransportEntity> forcedReturnOrderByWarehouse(String transportId) async {
+    return await handleDataResponseFromDataSource(
+        dataCallback: () => _dataSource.forcedReturnOrderByWarehouse(transportId));
+  }
+
+  @override
+  FRespData<TransportEntity> updateStatusTransportByDeliverOfReturnOrder(
+      String transportId, OrderStatus status, bool handled, String wardCode) async {
+    return await handleDataResponseFromDataSource(
+      dataCallback: () =>
+          _dataSource.updateStatusTransportByDeliverOfReturnOrder(transportId, status, handled, wardCode),
+    );
+  }
 }

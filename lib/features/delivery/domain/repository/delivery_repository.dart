@@ -11,11 +11,18 @@ abstract class DeliveryRepository {
   //# transport-controller
   FRespData<TransportEntity> acceptReturn(String transportId);
   FRespData<TransportEntity> cancelReturn(String transportId);
+  FRespData<TransportEntity> forcedReturnOrderByWarehouse(String transportId);
   FRespData<TransportEntity> getTransportById(String transportId);
   FRespData<String> getCustomerWardCodeByTransportId(String transportId); // custom
   FRespData<TransportResp> getTransportByWardCode(String wardCode);
   FRespData<TransportResp> getTransportByWardWork();
   FRespData<TransportEntity> updateStatusTransportByDeliver(
+    String transportId,
+    OrderStatus status,
+    bool handled,
+    String wardCode,
+  );
+  FRespData<TransportEntity> updateStatusTransportByDeliverOfReturnOrder(
     String transportId,
     OrderStatus status,
     bool handled,

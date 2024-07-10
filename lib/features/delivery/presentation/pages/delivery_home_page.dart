@@ -109,16 +109,7 @@ class DeliveryHomePage extends StatelessWidget {
           onPressed: () => Navigator.of(context).pushNamed('/pickup'),
         ),
         const SizedBox(width: 16),
-        MenuActionItem(
-          label: 'Trả hàng',
-          icon: Icons.qr_code_scanner,
-          color: Colors.redAccent,
-          size: 50,
-          labelTextStyle: _cashLabelTextStyle,
-          onPressed: () {
-            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
-          },
-        ),
+        menuActionAcceptOrDeniedReturnOrder(context),
       ],
     );
   }
@@ -127,16 +118,7 @@ class DeliveryHomePage extends StatelessWidget {
     return Row(
       children: [
         const SizedBox(width: 16),
-        MenuActionItem(
-          label: 'Trả hàng',
-          icon: Icons.qr_code_scanner,
-          color: Colors.redAccent,
-          size: 50,
-          labelTextStyle: _cashLabelTextStyle,
-          onPressed: () {
-            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
-          },
-        ),
+        menuActionAcceptOrDeniedReturnOrder(context),
       ],
     );
   }
@@ -152,22 +134,9 @@ class DeliveryHomePage extends StatelessWidget {
           color: Colors.blue,
           labelTextStyle: _menuLabelTextStyle,
           onPressed: () async {
-            await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
+            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
           },
         ),
-        // const SizedBox(width: 8),
-
-        // //# open scanner to get warehouse's qr >> delivered to warehouse
-        // MenuActionItem(
-        //   label: 'Lưu kho',
-        //   icon: Icons.mode_of_travel_outlined,
-        //   color: Colors.green,
-        //   labelTextStyle: _menuLabelTextStyle,
-        //   onPressed: () async {
-        //     final warehouseUsername = context.read<AuthCubit>().state.currentUsername;
-        //     Navigator.of(context).pushNamed('/qr', arguments: warehouseUsername);
-        //   },
-        // ),
       ],
     );
   }
@@ -196,35 +165,82 @@ class DeliveryHomePage extends StatelessWidget {
         ),
 
         const SizedBox(width: 16),
-        MenuActionItem(
-          label: 'Trả hàng',
-          icon: Icons.qr_code_scanner,
-          color: Colors.cyan,
-          size: 50,
-          labelTextStyle: _cashLabelTextStyle,
-          onPressed: () {
-            Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
-          },
-        ),
+        menuActionAcceptOrDeniedReturnOrder(context),
 
-        // //# view nearby orders
-        // const SizedBox(width: 10),
-        // MenuActionItem(
-        //   label: 'Đơn hàng\n gần đây',
-        //   icon: Icons.location_on_outlined,
-        //   color: Colors.orange,
-        //   size: 50,
-        //   labelTextStyle: _cashLabelTextStyle,
-        //   onPressed: () => Navigator.of(context).pushNamed('/pickup'),
-        // ),
+        const SizedBox(width: 16),
+        Tooltip(
+          message: 'Chấp nhận trả hàng hoặc từ chối hoàn trả',
+          child: MenuActionItem(
+            label: 'Hủy đơn hàng',
+            icon: Icons.cancel_outlined,
+            color: Colors.redAccent,
+            size: 50,
+            labelTextStyle: _cashLabelTextStyle,
+            onPressed: () {
+              Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.forcedReturn);
+            },
+          ),
+        ),
       ],
     );
   }
 
-  Row _shipperAndWarehouseActions(BuildContext context, TypeWork typeWork) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
+  Tooltip menuActionAcceptOrDeniedReturnOrder(BuildContext context) {
+    return Tooltip(
+      message: 'Chấp nhận trả hàng hoặc từ chối hoàn trả',
+      child: MenuActionItem(
+        label: 'Chấp nhận / Từ chối\nHoàn hàng',
+        icon: Icons.qr_code_scanner,
+        color: Colors.cyan,
+        size: 50,
+        labelTextStyle: _cashLabelTextStyle,
+        onPressed: () {
+          Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickup);
+        },
+      ),
+    );
+  }
+
+  Widget pickupReturnForWarehouseAndPickerMenuAction(BuildContext context, TypeWork typeWork) {
+    if (typeWork != TypeWork.WAREHOUSE && typeWork != TypeWork.SHIPPER) return const SizedBox.shrink();
+
+    return Tooltip(
+      message: typeWork == TypeWork.WAREHOUSE
+          ? 'Lưu kho đơn hàng hoàn hàng từ pickup / shipper'
+          : 'Lấy hàng từ kho để chuẩn bị giao',
+      child: MenuActionItem(
+        label: typeWork == TypeWork.WAREHOUSE ? 'Lưu kho / Nhận hàng\n(hoàn hàng)' : 'Lấy hàng từ kho\n(hoàn hàng)',
+        icon: Icons.qr_code_scanner,
+        color: Colors.blue,
+        labelTextStyle: _menuLabelTextStyle,
+        onPressed: () async {
+          await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.pickupReturn);
+        },
+      ),
+    );
+  }
+
+  Widget deliveredReturnForWarehouseAndPickerMenuAction(BuildContext context, TypeWork typeWork) {
+    if (typeWork != TypeWork.WAREHOUSE && typeWork != TypeWork.SHIPPER) return const SizedBox.shrink();
+
+    return Tooltip(
+      message: 'Trả hàng cho shop',
+      child: MenuActionItem(
+        label: 'Giao cho shop\n(hoàn hàng)',
+        icon: Icons.assignment_turned_in_outlined,
+        color: Colors.green,
+        labelTextStyle: _menuLabelTextStyle,
+        onPressed: () async {
+          await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.deliveredReturn);
+        },
+      ),
+    );
+  }
+
+  Widget _shipperAndWarehouseActions(BuildContext context, TypeWork typeWork) {
+    return Wrap(
+      // mainAxisAlignment: MainAxisAlignment.center,
+      // mainAxisSize: MainAxisSize.min,
       children: [
         Tooltip(
           message: typeWork == TypeWork.WAREHOUSE
@@ -249,10 +265,14 @@ class DeliveryHomePage extends StatelessWidget {
             color: Colors.green,
             labelTextStyle: _menuLabelTextStyle,
             onPressed: () async {
-              await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.deliver);
+              await Navigator.of(context).pushNamed(DeliveryScannerPage.routeName, arguments: DeliveryType.delivered);
             },
           ),
         ),
+        const SizedBox(width: 10),
+        pickupReturnForWarehouseAndPickerMenuAction(context, typeWork),
+        const SizedBox(width: 10),
+        deliveredReturnForWarehouseAndPickerMenuAction(context, typeWork),
       ],
     );
   }

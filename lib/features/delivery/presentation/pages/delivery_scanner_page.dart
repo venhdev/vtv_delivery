@@ -12,22 +12,34 @@ import '../../../../dependency_container.dart';
 import '../../domain/repository/delivery_repository.dart';
 import '../components/transport_info.dart';
 
+//! (shipper_pickup) - shipper get order from shop -> API not detect cash payment >> PICKED_UP
+//! (picker_store) - picker store order PICKED_UP >> WAREHOUSE --same1 --scan qr code of warehouse
 enum DeliveryType {
-  //*(1) - picker get order from shop PICKUP_PENDING >> PICKED_UP
-  //*!(2) - warehouse get order from shop PICKUP_PENDING >> WAREHOUSE --case vendor come to warehouse to send order
-  //*(3) - warehouse get order from picker PICKED_UP >> WAREHOUSE --same1
-  //*(3'1) - warehouse get order from shipper SHIPPING >> WAREHOUSE -- when ship failed
-  //!(4) - shipper get order from shop -> API not detect cash payment >> PICKED_UP
-  //* (5) - shipper get order from warehouse WAREHOUSE >> SHIPPING
-  //(return_accept) - picker,shipper,warehouse accept return order RETURNED >> ??
-  //(return_cancel) - picker,shipper,warehouse cancel return order RETURNED >> ??
-
+  //*(picker_pickup) - picker get order from shop PICKUP_PENDING >> PICKED_UP
+  //*(warehouse_store_shop) - warehouse get order from shop PICKUP_PENDING >> WAREHOUSE --case vendor come to warehouse to send order
+  //*(warehouse_store_picker) - warehouse store order from picker PICKED_UP >> WAREHOUSE --same1
+  //*(warehouse_store_shipper) - warehouse store order from shipper SHIPPING >> WAREHOUSE -- when ship failed
+  //* (shipper_shipping) - shipper get order from warehouse WAREHOUSE >> SHIPPING
+  //* (return_accept) - picker,shipper,warehouse accept return order RETURNED >> PICKED_UP
+  //* (return_cancel) - picker,shipper,warehouse cancel return order RETURNED >> COMPLETED
   pickup,
 
-  //// (6) - picker store order PICKED_UP >> WAREHOUSE --same1 --scan qr code of warehouse
-  //*(7) - shipper deliver to customer SHIPPING >> DELIVERED
-  //(8) - warehouse give order to customer WAREHOUSE >> DELIVERED
-  deliver,
+  //* (shipper_delivered) - shipper deliver to customer SHIPPING >> DELIVERED
+  //* (warehouse_delivered) - warehouse give order to customer WAREHOUSE >> DELIVERED
+  delivered,
+
+  //* (warehouse_forced_return) - warehouse forced return an order due to some reasons (e.g: customer not available)
+  forcedReturn,
+
+  //' (warehouse_store_return_picker) - warehouse store return order from picker PICKED_UP >> WAREHOUSE
+  //' (warehouse_store_return_shipper) - warehouse store return order from sipper SHIPPING >> WAREHOUSE ??? should use SHIPPING ???
+  //' (picker_pickup_return) - picker pickup return order from warehouse WAREHOUSE >> PICKED_UP ???
+  //' (shipper_pickup_return) - shipper pickup return order from warehouse WAREHOUSE >> SHIPPING
+  pickupReturn,
+
+  // (shipper_delivered_return) - shipper deliver return order to shop SHIPPING >> DELIVERED
+  // (picker_delivered_return) - shipper deliver return order to shop SHIPPING >> DELIVERED
+  deliveredReturn,
 }
 
 class DeliveryScannerPage extends StatelessWidget {
@@ -64,15 +76,16 @@ class DeliveryScannerPage extends StatelessWidget {
     switch (type) {
       case DeliveryType.pickup:
         if (transport.status == OrderStatus.PICKUP_PENDING && currentWorkType == TypeWork.PICKUP) {
-          //# (1) picker get order from shop
+          //# (picker_pickup)
           return 'Lấy hàng';
-        } else if ((transport.status == OrderStatus.PICKED_UP || transport.status == OrderStatus.SHIPPING) &&
+        } else if ((transport.status == OrderStatus.PICKUP_PENDING ||
+                transport.status == OrderStatus.PICKED_UP ||
+                transport.status == OrderStatus.SHIPPING) &&
             currentWorkType == TypeWork.WAREHOUSE) {
-          //# (!2, 3, 3'1) warehouse get order from shop/picker/shipper
-          //// transport.status == OrderStatus.PICKUP_PENDING ||
+          //# (warehouse_store_shop, warehouse_store_picker, warehouse_store_shipper, warehouse_store_return_picker)
           return 'Lưu kho';
         } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.SHIPPER) {
-          //# (5) shipper get order from warehouse
+          //# (shipper_shipping)
           return 'Lấy hàng từ kho';
         } else if ((currentWorkType == TypeWork.PICKUP ||
                 currentWorkType == TypeWork.SHIPPER ||
@@ -81,15 +94,42 @@ class DeliveryScannerPage extends StatelessWidget {
           return 'Chấp nhận trả hàng';
         }
 
-      case DeliveryType.deliver:
+      case DeliveryType.delivered:
         if (transport.status == OrderStatus.PICKED_UP && currentWorkType == TypeWork.PICKUP) {
           return null;
         } else if (transport.status == OrderStatus.SHIPPING && currentWorkType == TypeWork.SHIPPER) {
-          //# (7) shipper deliver to customer
+          //# (shipper_delivered)
           return 'Giao hàng thành công';
         } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.WAREHOUSE) {
-          //# (8) warehouse give order to customer WAREHOUSE >> DELIVERED
+          //# (warehouse_delivered)
           return 'Giao tại kho thành công';
+        }
+
+      case DeliveryType.forcedReturn:
+        //# (warehouse_forced_return)
+        if (currentWorkType == TypeWork.WAREHOUSE &&
+            (transport.status == OrderStatus.WAREHOUSE || transport.status == OrderStatus.SHIPPING)) {
+          return 'Trả hàng cho shop';
+        }
+
+      case DeliveryType.pickupReturn:
+        //# warehouse_store_return_picker, warehouse_store_return_shipper
+        if (currentWorkType == TypeWork.WAREHOUSE &&
+            (transport.status == OrderStatus.PICKED_UP || transport.status == OrderStatus.SHIPPING)) {
+          return 'Lưu kho đơn hoàn hàng';
+        } else if ((currentWorkType == TypeWork.PICKUP || currentWorkType == TypeWork.SHIPPER) &&
+            (transport.status == OrderStatus.WAREHOUSE)) {
+          //# picker_pickup_return, shipper_pickup_return
+          return 'Lấy đơn hoàn hàng từ kho';
+        }
+
+      case DeliveryType.deliveredReturn:
+        //# shipper_delivered_return
+        if (currentWorkType == TypeWork.SHIPPER && (transport.status == OrderStatus.SHIPPING)) {
+          return 'Giao đơn hoàn hàng cho shop';
+        } else if (currentWorkType == TypeWork.PICKUP && (transport.status == OrderStatus.PICKED_UP)) {
+          //# picker_delivered_return
+          return 'Lấy đơn hoàn hàng từ kho';
         }
     }
     return null;
@@ -110,7 +150,7 @@ class DeliveryScannerPage extends StatelessWidget {
     switch (type) {
       case DeliveryType.pickup:
         if (transport.status == OrderStatus.PICKUP_PENDING && currentWorkType == TypeWork.PICKUP) {
-          //# (1) picker get order from shop
+          //# (picker_pickup) picker get order from shop
           return () async => await execute(context, controller, () {
                 return sl<DeliveryRepository>().updateStatusTransportByDeliver(
                   transport.transportId,
@@ -123,8 +163,7 @@ class DeliveryScannerPage extends StatelessWidget {
                 transport.status == OrderStatus.PICKED_UP ||
                 transport.status == OrderStatus.SHIPPING) &&
             currentWorkType == TypeWork.WAREHOUSE) {
-          //// transport.status == OrderStatus.PICKUP_PENDING ||
-          //# (!2, 3, 3'1) warehouse get order from shop/picker/shipper
+          //# (warehouse_store_shop, warehouse_store_picker, warehouse_store_shipper, warehouse_store_return_picker)
           final warehouseWardCode = Provider.of<AppState>(context, listen: false).deliveryInfo!.wardCode;
           return () async {
             await execute(context, controller, () async {
@@ -153,15 +192,15 @@ class DeliveryScannerPage extends StatelessWidget {
             });
           };
         } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.SHIPPER) {
-          //# (5) shipper get order from warehouse
+          //# (shipper_shipping)
+          //? when shipper get order from warehouse, that order must be 'OrderStatus.WAREHOUSE'
+          //? so just get the wardCode from the first handle
           final warehouseWardCode = transport.transportHandles.first.wardCode;
           return () async => await execute(context, controller, () {
                 return sl<DeliveryRepository>().updateStatusTransportByDeliver(
                   transport.transportId,
                   OrderStatus.SHIPPING,
                   true,
-                  //? when shipper get order from warehouse, that order must be 'OrderStatus.WAREHOUSE'
-                  //? so just get the wardCode from the first handle
                   warehouseWardCode,
                 );
               });
@@ -170,14 +209,13 @@ class DeliveryScannerPage extends StatelessWidget {
                 currentWorkType == TypeWork.SHIPPER ||
                 currentWorkType == TypeWork.WAREHOUSE)) {
           //# (return_accept) - picker,shipper,warehouse accept return order RETURNED >> ??
-          return () async => await execute(context, controller, () {
-                return sl<DeliveryRepository>().acceptReturn(transport.transportId);
-              });
+          return () async =>
+              await execute(context, controller, () => sl<DeliveryRepository>().acceptReturn(transport.transportId));
         } else {
           return null;
         }
 
-      case DeliveryType.deliver:
+      case DeliveryType.delivered:
         if (transport.status == OrderStatus.PICKED_UP && currentWorkType == TypeWork.PICKUP) {
           return () async {
             execute(context, controller, () {
@@ -190,7 +228,7 @@ class DeliveryScannerPage extends StatelessWidget {
             });
           };
         } else if (transport.status == OrderStatus.SHIPPING && currentWorkType == TypeWork.SHIPPER) {
-          //# (7) shipper deliver to customer
+          //# (shipper_delivered)
           return () async {
             execute(context, controller, () {
               return sl<DeliveryRepository>().updateStatusTransportByDeliver(
@@ -202,7 +240,7 @@ class DeliveryScannerPage extends StatelessWidget {
             });
           };
         } else if (transport.status == OrderStatus.WAREHOUSE && currentWorkType == TypeWork.WAREHOUSE) {
-          //# (8) warehouse give order to customer WAREHOUSE >> DELIVERED
+          //# (warehouse_delivered)
           final warehouseWardCode = transport.transportHandles.first.wardCode;
           return () async {
             execute(context, controller, () {
@@ -214,8 +252,85 @@ class DeliveryScannerPage extends StatelessWidget {
               );
             });
           };
+        } else {
+          return null;
         }
-        return null; // after all, return null --no action
+
+      case DeliveryType.forcedReturn:
+        //# (warehouse_forced_return)
+        if (currentWorkType == TypeWork.WAREHOUSE &&
+            (transport.status == OrderStatus.WAREHOUSE || transport.status == OrderStatus.SHIPPING)) {
+          return () async => await execute(
+                context,
+                controller,
+                () => sl<DeliveryRepository>().forcedReturnOrderByWarehouse(transport.transportId),
+              );
+        } else {
+          return null;
+        }
+
+      case DeliveryType.pickupReturn:
+        //# warehouse_store_return_picker, warehouse_store_return_shipper
+        if (currentWorkType == TypeWork.WAREHOUSE &&
+            (transport.status == OrderStatus.PICKED_UP || transport.status == OrderStatus.SHIPPING)) {
+          return () => execute(context, controller, () {
+                final warehouseWardCode = Provider.of<AppState>(context, listen: false).deliveryInfo!.wardCode;
+                return sl<DeliveryRepository>().updateStatusTransportByDeliverOfReturnOrder(
+                  transport.transportId,
+                  OrderStatus.WAREHOUSE,
+                  true,
+                  warehouseWardCode,
+                );
+              });
+        } else if ((currentWorkType == TypeWork.PICKUP) && (transport.status == OrderStatus.WAREHOUSE)) {
+          //# picker_pickup_return
+          return () => execute(context, controller, () {
+                return sl<DeliveryRepository>().updateStatusTransportByDeliverOfReturnOrder(
+                  transport.transportId,
+                  OrderStatus.PICKED_UP,
+                  true,
+                  transport.transportHandles.first.wardCode, //? get wardCodeShop from the first handle
+                );
+              });
+        } else if ((currentWorkType == TypeWork.SHIPPER) && (transport.status == OrderStatus.WAREHOUSE)) {
+          //# shipper_pickup_return
+          return () => execute(context, controller, () {
+                return sl<DeliveryRepository>().updateStatusTransportByDeliverOfReturnOrder(
+                  transport.transportId,
+                  OrderStatus.SHIPPING,
+                  true,
+                  transport.transportHandles.first.wardCode, //? get wardCodeShop from the first handle
+                );
+              });
+        } else {
+          return null;
+        }
+
+      case DeliveryType.deliveredReturn:
+        //# shipper_delivered_return
+        if (currentWorkType == TypeWork.SHIPPER && (transport.status == OrderStatus.SHIPPING)) {
+          return () => execute(context, controller, () {
+                return sl<DeliveryRepository>().updateStatusTransportByDeliverOfReturnOrder(
+                  transport.transportId,
+                  OrderStatus.DELIVERED,
+                  true,
+                  transport.wardCodeShop,
+                );
+              });
+        } else if (currentWorkType == TypeWork.PICKUP && (transport.status == OrderStatus.PICKED_UP)) {
+          //# picker_delivered_return
+          return () => execute(context, controller, () {
+                return sl<DeliveryRepository>().updateStatusTransportByDeliverOfReturnOrder(
+                  transport.transportId,
+                  OrderStatus.DELIVERED,
+                  true,
+                  transport.wardCodeShop,
+                );
+              });
+        } else {
+          return null;
+        }
+
       default:
         return null;
     }

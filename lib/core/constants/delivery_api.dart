@@ -8,6 +8,9 @@ const String kAPITransportUpdateStatusURL = '/shipping/transport/update-status';
 const String kAPITransportGetURL = '/shipping/transport/get'; // {transportId}
 const String kAPITransportSuccessReturnURL = '/shipping/transport/success-return/{transportId}';
 const String kAPITransportCancelReturnURL = '/shipping/transport/cancel-return/{transportId}';
+// for warehouse forced return some order that cannot be delivered
+const String kAPITransportReturnWarehouseURL = '/shipping/transport/return/warehouse/{transportId}';
+const String kAPITransportUpdateStatusReturnOrderURL = '/shipping/transport/return/update-status/{transportId}';
 
 //# cash-order-controller
 const String kAPICashOrderTransfersMoneyWarehouseURL = '/shipping/cash-order/updates/transfers-money-warehouse';

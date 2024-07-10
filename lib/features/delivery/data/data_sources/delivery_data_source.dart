@@ -22,8 +22,11 @@ abstract class DeliveryDataSource {
   );
 
   Future<SuccessResponse<TransportEntity>> cancelReturn(String transportId);
-
+  Future<SuccessResponse<TransportEntity>> forcedReturnOrderByWarehouse(String transportId);
   Future<SuccessResponse<TransportEntity>> successReturn(String transportId);
+
+  Future<SuccessResponse<TransportEntity>> updateStatusTransportByDeliverOfReturnOrder(
+      String transportId, OrderStatus status, bool handled, String wardCode);
 }
 
 class DeliverDataSourceImpl implements DeliveryDataSource {
@@ -131,6 +134,51 @@ class DeliverDataSourceImpl implements DeliveryDataSource {
       url,
       data: transportId,
     );
+
+    return handleDioResponse<TransportEntity, MapS>(
+      response,
+      url,
+      parse: (jsonMap) => TransportEntity.fromMap(jsonMap['transportDTO']),
+    );
+  }
+
+  @override
+  Future<SuccessResponse<TransportEntity>> forcedReturnOrderByWarehouse(String transportId) async {
+    final url = uriBuilder(
+      path: kAPITransportReturnWarehouseURL,
+      pathVariables: {'transportId': transportId},
+    );
+
+    final response = await _dio.patchUri(
+      url,
+      data: transportId,
+    );
+
+    return handleDioResponse<TransportEntity, MapS>(
+      response,
+      url,
+      parse: (jsonMap) => TransportEntity.fromMap(jsonMap['transportDTO']),
+    );
+  }
+
+  @override
+  Future<SuccessResponse<TransportEntity>> updateStatusTransportByDeliverOfReturnOrder(
+    String transportId,
+    OrderStatus status,
+    bool handled,
+    String wardCode,
+  ) async {
+    final url = uriBuilder(
+      path: kAPITransportUpdateStatusReturnOrderURL,
+      pathVariables: {'transportId': transportId},
+      queryParameters: {
+        'status': status.name,
+        'handled': handled.toString(),
+        'wardCode': wardCode,
+      },
+    );
+
+    final response = await _dio.patchUri(url);
 
     return handleDioResponse<TransportEntity, MapS>(
       response,

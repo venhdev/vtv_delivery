@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dartz/dartz.dart' as dartz;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logger/logger.dart';
@@ -45,6 +46,29 @@ class _CashOrderByShipperPageState extends State<CashOrderByShipperPage> with Si
       items: <CashOrderByDateResp>[],
       filterParams: FilterCashTransferParams(),
       futureCallback: () => sl<CashRepository>().historyByShipper(HistoryType.shipperShipping),
+      //> server fixed, client don't need to filter paid cash order
+      // futureCallback: () async {
+      //   final respEither = await sl<CashRepository>().historyByShipper(HistoryType.shipperShipping);
+      //   return respEither.fold(
+      //     (error) => dartz.Left(error),
+      //     (ok) async {
+      //       //? because server return all cash orders contain paid and unpaid, so we need to filter it
+      //       //? if we don't filter, the paid cash order will be shown in the shipping list
+      //       List<CashOrderByDateResp> rs = ok.data!;
+
+      //       for (int i = 0; i < rs.length; i++) {
+      //         final filterCashOrders = rs[i]
+      //             .cashOrders
+      //             // .where((cash) => (cash.status == Status.INACTIVE && cash.handlePayment == true))
+      //             .where((cash) => (cash.status != Status.INACTIVE && cash.handlePayment == false))
+      //             .toList();
+      //         rs[i] = rs[i].copyWith(cashOrders: filterCashOrders);
+      //       }
+
+      //       return dartz.Right(SuccessResponse(data: rs));
+      //     },
+      //   );
+      // },
       parse: (unparsedData, onParseError) {
         return unparsedData.fold(
           (error) {

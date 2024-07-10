@@ -9,9 +9,11 @@ class MenuActionItem extends StatelessWidget {
     this.onPressed,
     this.size = 130,
     this.labelTextStyle,
+    this.secondLabel,
   });
 
   final String label;
+  final String? secondLabel;
   final TextStyle? labelTextStyle;
   final IconData icon;
   final Color? color;
@@ -38,7 +40,8 @@ class MenuActionItem extends StatelessWidget {
         ),
 
         //# Label
-        Text(label, style: labelTextStyle ?? const TextStyle(fontSize: 16)),
+        Text(label, style: labelTextStyle ?? const TextStyle(fontSize: 16), textAlign: TextAlign.center),
+        if (secondLabel != null) Text(secondLabel!, style: labelTextStyle ?? const TextStyle(fontSize: 16), textAlign: TextAlign.center),
       ],
     );
   }
