@@ -35,7 +35,7 @@ class PickupPendingOrdersByWard extends StatelessWidget {
             (error) => MessageScreen.error(error.message),
             (ok) {
               if (ok.data!.shopAndTransports.isEmpty || isEmpty(ok.data!.shopAndTransports)) {
-                return const Center(child: MessageScreen(message: 'Không có đơn hàng nào cần giao tại khu vực này!'));
+                return const Center(child: MessageScreen(message: 'Không có đơn hàng nào cần giao!'));
               }
               return Padding(
                 padding: const EdgeInsets.all(8.0),

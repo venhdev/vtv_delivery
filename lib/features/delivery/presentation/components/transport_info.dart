@@ -5,8 +5,6 @@ import 'package:vtv_common/order.dart';
 import 'package:vtv_common/profile.dart';
 
 import '../../../../dependency_container.dart';
-import '../../../cash/presentation/components/cash_order_detail_dialog.dart';
-
 class TransportInfo extends StatelessWidget {
   const TransportInfo({
     super.key,

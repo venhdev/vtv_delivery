@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.6] - 19/07/2024
+
+- add switch return order button
+- show all pending order in deliver's wardWork
+
 ## [1.0.4] - 10/07/2024
 
 - fixed return order
@@ -20,7 +25,7 @@ All notable changes to this project will be documented in this file.
 
 - base delivery app functions
 
-[unreleased]: https://github.com/venhha/vtv_delivery/compare/1.0.4...HEAD
-[1.0.4]: https://github.com/venhha/vtv_delivery/compare/1.0.3...1.0.4
+[Unreleased]: https://github.com/venhha/vtv_delivery/compare/1.0.6...HEAD
+[1.0.4]: https://github.com/venhha/vtv_delivery/compare/1.0.3...1.0.6
 [1.0.3]: https://github.com/venhha/vtv_delivery/compare/1.0.0...1.0.3
 [1.0.0]: https://github.com/venhha/vtv_delivery/releases/tag/1.0.0

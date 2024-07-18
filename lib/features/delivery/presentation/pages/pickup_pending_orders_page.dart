@@ -40,6 +40,11 @@ class _PickUpPendingOrdersPageState extends State<PickUpPendingOrdersPage> {
   // REVIEW: this got issue with the future builder >> need data to be loaded first
   //! [ADD] full address for TransportItem:FullAddressByWardCode
   CustomScrollView _buildCustomScrollViewBody(BuildContext context, DeliverEntity deliver) {
+    // final selectableList = <String>[
+    //   'Tất cả (Chọn phường/xã)',
+    //   ...[for (final ward in deliver.wardWorks) ward.fullName],
+    // ];
+
     return CustomScrollView(
       slivers: [
         //# app bar
@@ -52,12 +57,10 @@ class _PickUpPendingOrdersPageState extends State<PickUpPendingOrdersPage> {
         SliverToBoxAdapter(
           child: PopupMenuButton(
             itemBuilder: (context) {
-              return deliver.wardWorks.map((ward) {
-                return PopupMenuItem(
-                  value: ward,
-                  child: Text(ward.fullName),
-                );
+              final wardList = deliver.wardWorks.map((ward) {
+                return PopupMenuItem(value: ward, child: Text(ward.fullName));
               }).toList();
+              return wardList;
             },
             onSelected: (ward) {
               setState(() {
@@ -65,21 +68,19 @@ class _PickUpPendingOrdersPageState extends State<PickUpPendingOrdersPage> {
               });
             },
             child: ListTile(
-              title: Text(selectedWard?.fullName ?? 'Chọn phường/xã'),
-              trailing: const Icon(Icons.arrow_drop_down),
+              title: Text(selectedWard?.fullName ?? 'Tất cả (Chọn phường/xã)'),
+              trailing: selectedWard == null
+                  ? const Icon(Icons.arrow_drop_down)
+                  : IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => setState(() => selectedWard = null),
+                    ),
             ),
           ),
         ),
 
         //# list of orders at selected ward
-        if (selectedWard != null) SliverFillRemaining(child: PickupPendingOrdersByWard(wardWork: selectedWard!))
-        //? change log: old ver. without selected ward feature so it shows all wards
-        // SliverList(
-        //   delegate: SliverChildBuilderDelegate(
-        //     (context, index) => PickupPendingOrdersByWard(wardWork: deliver.wardWorks[index]),
-        //     childCount: deliver.wardWorks.length,
-        //   ),
-        // ),
+        SliverFillRemaining(child: PickupPendingOrdersByWard(wardWork: selectedWard))
       ],
     );
   }
